@@ -663,9 +663,9 @@ export default function Dashboard() {
                     )}
                 </AnimatePresence>
 
-                {/* Debug Info (Remove in production)
+                {/* Debug Info (Remove in production) */}
                 <div className="mb-4 p-3 bg-zinc-800 rounded-lg text-xs text-zinc-400">
-                    <div>Supabase User ID: {user?.id}</div> Changed Clerk to Supabase
+                    <div>Supabase User ID: {user?.id}</div> {/* Changed Clerk to Supabase */}
                     <div>Using ID: {userId}</div>
                     <div>Expenses: {expenses.length}</div>
                     <div>Categories: {categories.length}</div>
@@ -680,7 +680,7 @@ export default function Dashboard() {
                     >
                         Reload Data
                     </Button>
-                </div> */}
+                </div>
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">

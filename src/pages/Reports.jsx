@@ -1,21 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from "../lib/supabaseClient";
 import { subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { callGeminiApi } from '../lib/geminiApi';
-import GroupCreationModal from '@/components/GroupCreationModal'; // Corrected path
-import GroupSelector from '@/components/GroupSelector';       // Corrected path
-import GroupManagementModal from '@/components/GroupManagementModal'; // Corrected path
-import JoinGroupModal from '@/components/JoinGroupModal';     // Corrected path
+import { motion, AnimatePresence } from "framer-motion"; // Import motion from framer-motion
+import { callGeminiApi } from '@/lib/geminiApi';
 import {
     Search, Filter, Download, Calendar, TrendingUp, Users, DollarSign, Activity, ChevronDown, Eye, FileText, PieChart, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight,
     Target, Wallet, CreditCard, Banknote, TrendingDown, Lightbulb, Plus, X
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Import regular Button component
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+// Create a MotionButton component by wrapping the shadcn/ui Button
+const MotionButton = motion(Button);
 
 // --- Animation Variants ---
 const pageVariants = {
@@ -97,6 +96,14 @@ function formatCurrency(n) {
     }).format(Number(n));
 }
 
+// Utility to convert a single line for basic markdown (e.g., bolding).
+// This is a minimal implementation, not a full markdown parser.
+const processLineForMarkdown = (line) => {
+    // Convert bold text: **text** to <strong>text</strong>
+    return line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+};
+
+
 const ReportsPage = () => {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -121,10 +128,7 @@ const ReportsPage = () => {
     const [aiLoading, setAiLoading] = useState(false);
 
     // States for Group Modals
-    const [showGroupCreationModal, setShowGroupCreationModal] = useState(false);
-    const [showGroupManagementModal, setShowGroupManagementModal] = useState(false);
-    const [showJoinGroupModal, setShowJoinGroupModal] = useState(false);
-
+   
     // Initialize auth state
     useEffect(() => {
         let mounted = true;
@@ -181,7 +185,7 @@ const ReportsPage = () => {
                 .contains('members', [userId]);
             if (groupsError) throw groupsError;
             setGroups(groupsData || []);
-            // console.log("Fetched groupsData in ReportsPage:", groupsData); // For debugging
+            console.log("ReportsPage: Fetched groupsData (after setGroups):", groupsData);
 
             let expensesData = [];
             let incomeData = [];
@@ -248,7 +252,7 @@ const ReportsPage = () => {
         }
     };
 
-    // Effect to trigger data load when user changes or selectedGroupId changes
+    // Effect to trigger data load when user changes or on mount/selectedGroupId change
     useEffect(() => {
         if (authLoading) return;
         if (!user) {
@@ -276,7 +280,7 @@ const ReportsPage = () => {
             // Groups where the user is a member (this will trigger when you join a new group!)
             supabase.channel('user-groups-changes')
                 .on("postgres_changes", { event: "*", schema: "public", table: "groups", filter: `members.cs.{${JSON.stringify(userId)}}` }, (payload) => {
-                    // console.log("Realtime group update detected:", payload); // For debugging real-time
+                    console.log("ReportsPage: Realtime group update detected:", payload);
                     loadAllData(); // Refresh all data including groups
                 })
                 .subscribe()
@@ -586,28 +590,28 @@ const ReportsPage = () => {
             let filename = '';
 
             switch (report.id) {
-                case '1': // Net Cash Flow
+                case '1':
                     csvContent = 'Metric,Amount\n' +
                                  `Total Income,${report.data.totalIncome}\n` +
                                  `Total Expenses,${report.data.totalExpenses}\n` +
                                  `Net Income,${report.data.netIncome}`;
                     filename = 'net-cash-flow.csv';
                     break;
-                case '2': // Expense categories
+                case '2':
                     csvContent = 'Category,Amount,Transaction Count\n' +
                         Object.entries(report.data || {}).map(([cat, data]) =>
                             `${cat},${data.amount || 0},${data.count || 0}`
                         ).join('\n');
                     filename = 'expense-categories.csv';
                     break;
-                case '3': // Income sources
+                case '3':
                     csvContent = 'Source,Amount\n' +
                         Object.entries(report.data || {}).map(([source, amount]) =>
                             `${source},${amount || 0}`
                         ).join('\n');
                     filename = 'income-sources.csv';
                     break;
-                case '4': // Savings Goals
+                case '4':
                     csvContent = 'Goal Name,Target Amount,Current Amount,Target Date,Progress (%)\n' +
                                  report.data.activeSavingsGoals.map(goal => {
                                     const progress = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount * 100).toFixed(1) : 0;
@@ -615,14 +619,14 @@ const ReportsPage = () => {
                                 }).join('\n');
                     filename = 'savings-goals.csv';
                     break;
-                case '5': // Budget Performance
+                case '5':
                     csvContent = 'Budget Name,Amount,Spent,Remaining,Percentage Used (%),Status\n' +
                                  report.data.map(budget =>
                                     `${budget.name},${budget.amount || 0},${budget.spent || 0},${budget.remaining || 0},${budget.percentage.toFixed(1) || 0},${budget.status}`
                                 ).join('\n');
                     filename = 'budget-performance.csv';
                     break;
-                case '6': // Payment Methods
+                case '6':
                     csvContent = 'Payment Method,Total Spent\n' +
                                  Object.entries(report.data || {}).map(([method, amount]) =>
                                     `${method},${amount || 0}`
@@ -673,7 +677,7 @@ const ReportsPage = () => {
                 - Net Cash Flow: ${netCashFlowAmountFormatted}
                 - Number of active savings goals: ${numActiveSavingsGoals}
 
-                Please provide 3-5 concise, actionable, and practical tips for reducing expenses. Focus on general advice and specific suggestions related to common expense categories if available. Avoid generic statements and be encouraging. Format the tips as a numbered list.
+                Please provide 3-5 concise, actionable, and practical tips for reducing expenses. Focus on general advice and specific suggestions related to common expense categories if available. Avoid generic statements and be encouraging. Format the tips as a numbered list using Markdown.
                 `;
 
             const response = await callGeminiApi(prompt);
@@ -940,63 +944,7 @@ const ReportsPage = () => {
                             Gain insights into your spending, income, and financial goals.
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {/* Group Selector */}
-                        <GroupSelector
-                            groups={groups}
-                            selectedGroupId={selectedGroupId}
-                            onSelectGroup={setSelectedGroupId}
-                        />
-
-                        {/* Button to manage groups */}
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowGroupManagementModal(true)}
-                                className="border-green-700 text-green-300 hover:bg-green-800 hover:text-green-50"
-                            >
-                                <Users className="w-4 h-4 mr-2" />
-                                Manage Groups
-                            </Button>
-                        </motion.div>
-
-                        {/* Button to create a group */}
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowGroupCreationModal(true)}
-                                className="border-blue-700 text-blue-300 hover:bg-blue-800 hover:text-blue-50"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Group
-                            </Button>
-                        </motion.div>
-                        {/* Button to join a group */}
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowJoinGroupModal(true)}
-                                className="border-purple-700 text-purple-300 hover:bg-purple-800 hover:text-purple-50"
-                            >
-                                <Users className="w-4 h-4 mr-2" />
-                                Join Group
-                            </Button>
-                        </motion.div>
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={loadAllData}
-                                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-                            >
-                                <RefreshCw className="w-4 h-4 mr-2" />
-                                Refresh Data
-                            </Button>
-                        </motion.div>
-                    </div>
+                    
                 </motion.div>
 
                 {/* Filters and Search */}
@@ -1123,9 +1071,13 @@ const ReportsPage = () => {
                                         animate="visible"
                                     >
                                         {aiTips.split('\n').map((line, index) => (
-                                            <motion.p key={index} variants={aiTextItemVariants} className="mb-1">
-                                                {line}
-                                            </motion.p>
+                                            <motion.p
+                                                key={index}
+                                                variants={aiTextItemVariants}
+                                                className="mb-1"
+                                                // Safely render the HTML after processing markdown for this line
+                                                dangerouslySetInnerHTML={{ __html: processLineForMarkdown(line) }}
+                                            />
                                         ))}
                                     </motion.div>
                                 ) : (
@@ -1210,31 +1162,7 @@ const ReportsPage = () => {
                     </CardContent>
                 </Card>
             </div>
-            {/* Group Creation Modal */}
-            <GroupCreationModal
-                isOpen={showGroupCreationModal}
-                onClose={() => setShowGroupCreationModal(false)}
-                onGroupCreated={(newGroup) => {
-                    console.log("New group created:", newGroup);
-                    loadAllData();
-                }}
-                user={user}
-            />
-            {/* Group Management Modal */}
-            <GroupManagementModal
-                isOpen={showGroupManagementModal}
-                onClose={() => setShowGroupManagementModal(false)}
-                groups={groups}
-                user={user}
-                onGroupsUpdated={loadAllData}
-            />
-            {/* Join Group Modal */}
-            <JoinGroupModal
-                isOpen={showJoinGroupModal}
-                onClose={() => setShowJoinGroupModal(false)}
-                user={user}
-                onGroupJoined={loadAllData}
-            />
+            
             {/* Detailed Report Modal */}
             <AnimatePresence>
                 {selectedReport && (

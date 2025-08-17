@@ -10,7 +10,7 @@ async function callGeminiApi(prompt, maxRetries = 5, initialDelay = 1000) {
         try {
             // !! IMPORTANT !! Paste your Gemini API Key here from Google AI Studio.
             // Go to https://aistudio.google.com/app/apikey to generate one.
-            const apiKey = process.env.GOOGLE_API_KEY; // <--- PASTE YOUR API KEY HERE
+            const apiKey = import.meta.env.VITE_GOOGLE_API_KEY; // <--- PASTE YOUR API KEY HERE
 
             // Ensure the API Key is not empty
             if (!apiKey || apiKey === "YOUR_PASTED_API_KEY_HERE") {
