@@ -1,12 +1,88 @@
-# React + Vite
+📊 Expense Tracker with Budget Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React + Supabase application that helps users track daily expenses, set budgets, and visualize spending patterns with smooth animations and a clean UI.
 
-Currently, two official plugins are available:
+🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+🔐 Authentication – Secure login/signup powered by Supabase Auth.
 
-## Expanding the ESLint configuration
+💸 Expense Management – Add, edit, delete, and categorize expenses.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+📅 Budget Planner – Set monthly/weekly budgets and monitor progress.
+
+📈 Analytics Dashboard – Visual charts for income vs. expenses.
+
+🎨 Modern UI – Built with React, shadcn/ui, Tailwind CSS, and Framer Motion.
+
+☁️ Supabase Backend – Database + Auth + API in one place.
+
+🌍 Deployment Ready – Can be hosted on Vercel/Netlify with Supabase backend.
+
+🛠️ Tech Stack
+
+Frontend
+
+React (Vite)
+
+Tailwind CSS + shadcn/ui
+
+Framer Motion
+
+Backend & Database
+
+Supabase (Postgres, Auth, API)
+
+Deployment
+
+Frontend → Vercel / Netlify
+
+Backend + Database → Supabase
+
+📂 Project Structure
+/src
+ ├── components   → UI components (shadcn + custom)
+ ├── pages        → App pages (Dashboard, Login, Register, etc.)
+ ├── hooks        → Custom React hooks
+ ├── lib          → Supabase client setup
+ ├── context      → Auth & App context
+ └── utils        → Helpers & formatters
+
+⚙️ Installation & Setup
+1. Clone the repo
+git clone https://github.com/your-username/expense-tracker.git
+cd expense-tracker
+
+2. Install dependencies
+npm install
+
+3. Setup environment variables
+
+Create a .env file in the root:
+
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+4. Run the app
+npm run dev
+
+📸 Screenshots (to be added)
+
+Dashboard View
+
+Expense List
+
+Budget Planner
+
+Analytics Charts
+
+📌 Roadmap
+
+ Add recurring expenses
+
+ Budget alerts (email/notifications via Supabase)
+
+ Dark mode toggle
+
+ Export data (CSV/PDF)
+
+ Mobile app (Expo + Supabase)
