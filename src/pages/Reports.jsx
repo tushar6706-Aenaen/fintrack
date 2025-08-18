@@ -4,7 +4,7 @@ import { subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "d
 import { motion, AnimatePresence } from "framer-motion"; // Import motion from framer-motion
 import { callGeminiApi } from '@/lib/geminiApi';
 import {
-    Search, Filter, Download, Calendar, TrendingUp, Users, DollarSign, Activity, ChevronDown, Eye, FileText, PieChart, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight,
+    Search, Filter, Download, Calendar, TrendingUp, Users, Activity, ChevronDown, Eye, FileText, PieChart, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight,
     Target, Wallet, CreditCard, Banknote, TrendingDown, Lightbulb, Plus, X
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -441,7 +441,7 @@ const ReportsPage = () => {
                 size: 'Live Data',
                 format: 'Interactive',
                 status: 'ready',
-                icon: DollarSign,
+                icon: Banknote,
                 color: 'bg-blue-600',
                 data: incomeBySource
             },

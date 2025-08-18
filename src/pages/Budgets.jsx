@@ -11,7 +11,7 @@ import {
     Edit,
     Trash2,
     Calendar,
-    DollarSign,
+    Banknote,
     AlertTriangle,
     CheckCircle,
     Activity,
@@ -736,7 +736,7 @@ export default function Budgets() {
                                     title: "Remaining",
                                     value: formatCurrency(totalRemaining),
                                     subtitle: "Available to spend",
-                                    icon: DollarSign,
+                                    icon: Banknote,
                                     color: "green"
                                 },
                                 {
@@ -753,7 +753,7 @@ export default function Budgets() {
                                     whileHover="hover"
                                     custom={index}
                                 >
-                                    <Card className="bg-zinc-900 border-zinc-800">
+                                    <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900   border-zinc-800">
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle className="text-sm font-medium text-zinc-400">
                                                 {stat.title}
@@ -913,7 +913,7 @@ export default function Budgets() {
                                                                                 animate={{ opacity: 1, y: 0 }}
                                                                                 transition={{ delay: 0.3 + index * 0.05 }}
                                                                             >
-                                                                                <DollarSign className="w-3 h-3" />
+                                                                                <Banknote className="w-3 h-3" />
                                                                                 {formatCurrency(budget.amount)} budget
                                                                             </motion.span>
                                                                             {budget.categories && (

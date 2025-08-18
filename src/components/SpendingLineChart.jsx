@@ -1,11 +1,13 @@
 // src/components/SpendingLineChart.jsx
 import React from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import FloatingParticles from "./FloatingParticles";
 
 export default function SpendingLineChart({ data = [] }) {
   // data expected: [{ date: '08-01', total: 120 }, ...]
   return (
-    <div className="bg-zinc-900 rounded-2xl p-4 border border-zinc-800">
+    <div className="bg-zinc-950 rounded-2xl p-4 border border-zinc-800">
+      <FloatingParticles/>
       <h3 className="text-lg font-semibold mb-3">Monthly Trend</h3>
       <div style={{ width: "100%", height: 220 }}>
         <ResponsiveContainer>

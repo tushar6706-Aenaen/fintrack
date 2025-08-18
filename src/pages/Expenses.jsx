@@ -7,7 +7,7 @@ import {
   Edit,
   Trash2,
   Calendar,
-  DollarSign,
+  Banknote,
   Tag,
   CreditCard,
   AlertCircle,
@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"; // Ensure you have this component
+import FloatingParticles from "@/components/FloatingParticles";
 
 
 function formatCurrency(n) {
@@ -567,7 +568,7 @@ export default function Expenses() {
           </motion.div>
 
           {/* Filters */}
-          <Card className="mb-6 bg-zinc-900 border-zinc-800">
+          <Card className="mb-6 bg-gradient-to-br from-zinc-950 to-zinc-900  border-zinc-800">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="lg:col-span-2">
@@ -628,7 +629,7 @@ export default function Expenses() {
             animate="visible"
           >
             <motion.div variants={cardItemVariants}>
-              <Card className="bg-zinc-900 border-zinc-800">
+              <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -637,14 +638,14 @@ export default function Expenses() {
                         {formatCurrency(filteredExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0))}
                       </p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-blue-400" />
+                    <Banknote className="w-8 h-8 text-blue-400" />
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={cardItemVariants}>
-              <Card className="bg-zinc-900 border-zinc-800">
+              <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -658,7 +659,7 @@ export default function Expenses() {
             </motion.div>
 
             <motion.div variants={cardItemVariants}>
-              <Card className="bg-zinc-900 border-zinc-800">
+              <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
               
@@ -751,7 +752,8 @@ export default function Expenses() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-zinc-800 rounded-lg border border-zinc-700">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-br from-zinc-950 to-zinc-900 rounded-lg border border-zinc-700">
+                          <FloatingParticles/>
                           <div className="flex items-center gap-4 flex-1 mb-3 sm:mb-0">
                             <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                               {expense.categories?.icon || "💰"}
