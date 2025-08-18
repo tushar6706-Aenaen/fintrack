@@ -1091,7 +1091,7 @@ const ReportsPage = () => {
                 </motion.div>
 
                 {/* Reports List */}
-                <Card className="bg-zinc-900 border-zinc-800">
+                <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
                     <CardHeader>
                         <CardTitle className="text-zinc-50">Generated Reports</CardTitle>
                     </CardHeader>
@@ -1123,7 +1123,7 @@ const ReportsPage = () => {
                                         whileHover="hover"
                                         layout
                                     >
-                                        <Card className="bg-zinc-800 border-zinc-700 h-full flex flex-col">
+                                        <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-700 h-full flex flex-col">
                                             <CardHeader className="flex-row items-center justify-between pb-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${report.color}`}>
