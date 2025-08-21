@@ -387,7 +387,7 @@ export default function SavingsGoals() {
                             return (
                                 <MotionCard
                                     key={goal.id}
-                                    className="bg-zinc-900 border-zinc-800 flex flex-col justify-between"
+                                    className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800 flex flex-col justify-between"
                                     variants={cardItemVariants}
                                     whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
                                     whileTap={{ scale: 0.98 }}

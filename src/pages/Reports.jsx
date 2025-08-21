@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"; // Import regular Button compon
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import FloatingParticles from '@/components/FloatingParticles';
 
 // Create a MotionButton component by wrapping the shadcn/ui Button
 const MotionButton = motion(Button);
@@ -948,7 +949,9 @@ const ReportsPage = () => {
                 </motion.div>
 
                 {/* Filters and Search */}
-                <Card className="mb-6 bg-zinc-900 border-zinc-800">
+                
+                <Card className="mb-6 bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
+                    <FloatingParticles/>
                     <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 w-4 h-4" />
@@ -982,7 +985,7 @@ const ReportsPage = () => {
                 >
                     {quickStats.map((stat, index) => (
                         <motion.div key={stat.label} variants={statCardVariants} whileHover="hover">
-                            <Card className="bg-zinc-900 border-zinc-800">
+                            <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium text-zinc-400">
                                         {stat.label}
