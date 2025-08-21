@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import {
     LayoutDashboard,
     Receipt,
@@ -96,50 +96,45 @@ const logoVariants = {
     }
 };
 
+// Simplified mobile menu variants for better performance
 const mobileMenuVariants = {
     initial: {
         x: "100%",
-        opacity: 0,
-        scale: 0.9
+        opacity: 0
     },
     animate: {
         x: 0,
         opacity: 1,
-        scale: 1,
         transition: {
-            type: "spring",
-            damping: 25,
-            stiffness: 120,
-            staggerChildren: 0.1,
+            type: "tween",
+            duration: 0.3,
+            ease: "easeOut",
+            staggerChildren: 0.05,
             delayChildren: 0.1
         }
     },
     exit: {
         x: "100%",
         opacity: 0,
-        scale: 0.9,
         transition: {
-            duration: 0.3,
-            ease: "easeInOut"
+            type: "tween",
+            duration: 0.25,
+            ease: "easeIn"
         }
     }
 };
 
 const mobileItemVariants = {
-    initial: { x: 50, opacity: 0 },
-    animate: { x: 0, opacity: 1 },
-    exit: { x: 50, opacity: 0 }
-};
-
-const notificationVariants = {
-    initial: { scale: 0, rotate: 0 },
-    animate: {
-        scale: 1,
-        rotate: [0, -10, 10, 0],
-        transition: {
-            scale: { duration: 0.3 },
-            rotate: { duration: 0.6, repeat: Infinity, repeatDelay: 3 }
-        }
+    initial: { x: 30, opacity: 0 },
+    animate: { 
+        x: 0, 
+        opacity: 1,
+        transition: { duration: 0.3, ease: "easeOut" }
+    },
+    exit: { 
+        x: 30, 
+        opacity: 0,
+        transition: { duration: 0.2 }
     }
 };
 
@@ -149,6 +144,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
     const { scrollY } = useScroll();
+    const prefersReducedMotion = useReducedMotion();
 
     // Handle scroll effects
     useMotionValueEvent(scrollY, "change", (latest) => {
@@ -187,6 +183,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
@@ -197,98 +194,105 @@ export default function AnimatedHeader({ user, onSignOut }) {
                 variants={headerVariants}
                 initial="initial"
                 animate="animate"
-                className={`sticky top-6 z-50 w-[370px]  mx-auto lg:w-full  rounded-full  transition-all duration-300 ${isScrolled
+                className={`sticky top-6 z-50 w-[370px] mx-auto lg:w-full rounded-full transition-all duration-300 ${isScrolled
                         ? 'bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-700/50 shadow-2xl shadow-black/40'
                         : 'bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-700/30 shadow-xl shadow-black/20'
                     } lg:top-4 lg:mx-auto lg:max-w-5xl lg:border lg:rounded-2xl lg:border-zinc-700/30 relative overflow-hidden`}
             >
-                {/* Animated Background */}
-                <div className="absolute inset-0 overflow-hidden">
-                    {/* Gradient Background Animation */}
-                    <motion.div
-                        className="absolute inset-0 "
-                        animate={{
-                            background: [
-                                "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)",
-                                "linear-gradient(90deg, rgba(99,102,241,0.1) 0%, rgba(139,69,255,0.05) 50%, rgba(147,51,234,0.1) 100%)",
-                                "linear-gradient(90deg, rgba(147,51,234,0.1) 0%, rgba(99,102,241,0.05) 50%, rgba(139,69,255,0.1) 100%)",
-                                "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)"
-                            ]
-                        }}
-                        transition={{
-                            duration: 8,
-                            repeat: Infinity,
-                            ease: "linear"
-                        }}
-                    />
+                {/* Simplified Background for Mobile - No animations */}
+                {window.innerWidth > 768 ? (
+                    !prefersReducedMotion && (
+                        <div className="absolute inset-0 overflow-hidden">
+                            {/* Gradient Background Animation - Desktop only */}
+                            <motion.div
+                                className="absolute inset-0"
+                                animate={{
+                                    background: [
+                                        "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)",
+                                        "linear-gradient(90deg, rgba(99,102,241,0.1) 0%, rgba(139,69,255,0.05) 50%, rgba(147,51,234,0.1) 100%)",
+                                        "linear-gradient(90deg, rgba(147,51,234,0.1) 0%, rgba(99,102,241,0.05) 50%, rgba(139,69,255,0.1) 100%)",
+                                        "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)"
+                                    ]
+                                }}
+                                transition={{
+                                    duration: 8,
+                                    repeat: Infinity,
+                                    ease: "linear"
+                                }}
+                            />
 
-                    {/* Floating Orbs */}
-                    {[...Array(6)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute rounded-full opacity-20"
-                            style={{
-                                background: `radial-gradient(circle, ${
-                                    i % 3 === 0 ? 'rgba(139,69,255,0.3)' : 
-                                    i % 3 === 1 ? 'rgba(99,102,241,0.3)' : 'rgba(147,51,234,0.3)'
-                                } 0%, transparent 70%)`,
-                                width: `${Math.random() * 100 + 50}px`,
-                                height: `${Math.random() * 100 + 50}px`,
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                            }}
-                            animate={{
-                                x: [0, Math.random() * 200 - 100, 0],
-                                y: [0, Math.random() * 100 - 50, 0],
-                                scale: [1, 1.2, 1],
-                                opacity: [0.1, 0.3, 0.1]
-                            }}
-                            transition={{
-                                duration: Math.random() * 10 + 5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: i * 2
-                            }}
-                        />
-                    ))}
+                            {/* Floating orbs - Desktop only */}
+                            {[...Array(6)].map((_, i) => (
+                                <motion.div
+                                    key={i}
+                                    className="absolute rounded-full opacity-20"
+                                    style={{
+                                        background: `radial-gradient(circle, ${
+                                            i % 3 === 0 ? 'rgba(139,69,255,0.3)' : 
+                                            i % 3 === 1 ? 'rgba(99,102,241,0.3)' : 'rgba(147,51,234,0.3)'
+                                        } 0%, transparent 70%)`,
+                                        width: `${Math.random() * 60 + 30}px`,
+                                        height: `${Math.random() * 60 + 30}px`,
+                                        left: `${Math.random() * 100}%`,
+                                        top: `${Math.random() * 100}%`,
+                                    }}
+                                    animate={{
+                                        x: [0, Math.random() * 100 - 50, 0],
+                                        y: [0, Math.random() * 50 - 25, 0],
+                                        scale: [1, 1.1, 1],
+                                        opacity: [0.1, 0.2, 0.1]
+                                    }}
+                                    transition={{
+                                        duration: Math.random() * 8 + 4,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                        delay: i * 2
+                                    }}
+                                />
+                            ))}
 
-                    {/* Sparkle Particles */}
-                    {[...Array(12)].map((_, i) => (
-                        <motion.div
-                            key={`sparkle-${i}`}
-                            className="absolute w-1 h-1 bg-white rounded-full"
-                            style={{
-                                left: `${Math.random() * 100}%`,
-                                top: `${Math.random() * 100}%`,
-                            }}
-                            animate={{
-                                scale: [0, 1, 0],
-                                opacity: [0, 1, 0],
-                                rotate: [0, 180, 360]
-                            }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                delay: i * 0.5,
-                                ease: "easeInOut"
-                            }}
-                        />
-                    ))}
+                            {/* Sparkle particles - Desktop only */}
+                            {[...Array(8)].map((_, i) => (
+                                <motion.div
+                                    key={`sparkle-${i}`}
+                                    className="absolute w-1 h-1 bg-white rounded-full"
+                                    style={{
+                                        left: `${Math.random() * 100}%`,
+                                        top: `${Math.random() * 100}%`,
+                                    }}
+                                    animate={{
+                                        scale: [0, 1, 0],
+                                        opacity: [0, 1, 0],
+                                        rotate: [0, 180, 360]
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        delay: i * 0.8,
+                                        ease: "easeInOut"
+                                    }}
+                                />
+                            ))}
 
-                    {/* Wave Effect */}
-                    <motion.div
-                        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"
-                        animate={{
-                            scaleX: [0, 1, 0],
-                            opacity: [0, 0.8, 0]
-                        }}
-                        transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                    />
-                </div>
+                            {/* Wave Effect - Desktop only */}
+                            <motion.div
+                                className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"
+                                animate={{
+                                    scaleX: [0, 1, 0],
+                                    opacity: [0, 0.8, 0]
+                                }}
+                                transition={{
+                                    duration: 4,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                        </div>
+                    )
+                ) : (
+                    /* Static background for mobile */
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-purple-500/3 to-indigo-500/5" />
+                )}
 
                 <div className="flex items-center justify-between px-4 py-3 lg:px-6 relative z-10">
                     {/* Left Section - Logo and Title */}
@@ -301,7 +305,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             whileHover="hover"
                             whileTap={{ scale: 0.9 }}
                             className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25"
-                            animate={{
+                            animate={!prefersReducedMotion && window.innerWidth > 768 ? {
                                 boxShadow: [
                                     "0 8px 25px rgba(139,69,255,0.25)",
                                     "0 12px 35px rgba(139,69,255,0.4)",
@@ -313,17 +317,17 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                     "linear-gradient(135deg, #4338ca 0%, #8b5cf6 50%, #9333ea 100%)",
                                     "linear-gradient(135deg, #8b5cf6 0%, #9333ea 50%, #4338ca 100%)"
                                 ]
-                            }}
+                            } : {}}
                             transition={{
                                 boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" },
                                 background: { duration: 6, repeat: Infinity, ease: "linear" }
                             }}
                         >
                             <motion.div
-                                animate={{ 
+                                animate={!prefersReducedMotion && window.innerWidth > 768 ? { 
                                     rotate: [0, 5, -5, 0],
                                     scale: [1, 1.1, 1]
-                                }}
+                                } : {}}
                                 transition={{
                                     duration: 4,
                                     repeat: Infinity,
@@ -333,18 +337,11 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white relative z-10" />
                             </motion.div>
 
-                            {/* Animated background particles */}
-                            <motion.div
-                                className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-400 to-indigo-600 opacity-0"
-                                whileHover={{ opacity: 1 }}
-                                transition={{ duration: 0.3 }}
-                            />
-
-                            {/* Enhanced Sparkle effects */}
-                            {[...Array(5)].map((_, i) => (
+                            {/* Sparkle effects - only on desktop */}
+                            {!prefersReducedMotion && window.innerWidth > 768 && [...Array(3)].map((_, i) => (
                                 <motion.div
                                     key={i}
-                                    className="absolute w-1 h-1 bg-white rounded-full hidden sm:block"
+                                    className="absolute w-1 h-1 bg-white rounded-full"
                                     animate={{
                                         scale: [0, 1.5, 0],
                                         opacity: [0, 1, 0],
@@ -353,29 +350,31 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                     transition={{
                                         duration: 2.5,
                                         repeat: Infinity,
-                                        delay: i * 0.5,
+                                        delay: i * 0.8,
                                         ease: "easeInOut"
                                     }}
                                     style={{
-                                        left: `${15 + i * 15}%`,
-                                        top: `${15 + i * 15}%`,
+                                        left: `${20 + i * 20}%`,
+                                        top: `${20 + i * 20}%`,
                                     }}
                                 />
                             ))}
 
-                            {/* Pulse Ring */}
-                            <motion.div
-                                className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-white/20"
-                                animate={{
-                                    scale: [1, 1.2, 1],
-                                    opacity: [0.5, 0, 0.5]
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            />
+                            {/* Pulse Ring - only on desktop */}
+                            {!prefersReducedMotion && window.innerWidth > 768 && (
+                                <motion.div
+                                    className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-white/20"
+                                    animate={{
+                                        scale: [1, 1.2, 1],
+                                        opacity: [0.5, 0, 0.5]
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                />
+                            )}
                         </motion.div>
 
                         <div className="min-w-0 flex-1">
@@ -385,7 +384,9 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 animate={{ 
                                     opacity: 1, 
                                     x: 0,
-                                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+                                    ...(prefersReducedMotion || window.innerWidth <= 768 ? {} : {
+                                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+                                    })
                                 }}
                                 transition={{ 
                                     opacity: { delay: 0.2 },
@@ -402,11 +403,15 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 className="text-xs text-zinc-400 truncate"
                                 initial={{ opacity: 0 }}
                                 animate={{ 
-                                    opacity: [0.6, 1, 0.6],
+                                    opacity: (prefersReducedMotion || window.innerWidth <= 768) ? 1 : [0.6, 1, 0.6],
                                 }}
                                 transition={{ 
-                                    opacity: { delay: 0.4 },
-                                    opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                                    opacity: (prefersReducedMotion || window.innerWidth <= 768) ? { delay: 0.4 } : {
+                                        delay: 0.4,
+                                        duration: 2, 
+                                        repeat: Infinity, 
+                                        ease: "easeInOut" 
+                                    }
                                 }}
                             >
                                 {getCurrentPageName()}
@@ -438,22 +443,24 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                             : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
                                         }`}
                                 >
-                                    {/* Animated background shimmer */}
-                                    <motion.div
-                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
-                                        animate={{
-                                            x: [-100, 300]
-                                        }}
-                                        transition={{
-                                            duration: 3,
-                                            repeat: Infinity,
-                                            repeatDelay: 4,
-                                            ease: "easeInOut"
-                                        }}
-                                    />
+                                    {/* Animated background shimmer - only on desktop */}
+                                    {!prefersReducedMotion && window.innerWidth > 768 && (
+                                        <motion.div
+                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+                                            animate={{
+                                                x: [-100, 300]
+                                            }}
+                                            transition={{
+                                                duration: 3,
+                                                repeat: Infinity,
+                                                repeatDelay: 4,
+                                                ease: "easeInOut"
+                                            }}
+                                        />
+                                    )}
 
                                     <motion.div
-                                        animate={active ? {
+                                        animate={!prefersReducedMotion && window.innerWidth > 768 && active ? {
                                             rotate: [0, 5, -5, 0],
                                             scale: [1, 1.15, 1]
                                         } : {}}
@@ -489,10 +496,10 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                     {active && (
                                         <motion.div
                                             className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"
-                                            animate={{
+                                            animate={!prefersReducedMotion && window.innerWidth > 768 ? {
                                                 scale: [1, 1.3, 1],
                                                 opacity: [1, 0.7, 1]
-                                            }}
+                                            } : {}}
                                             transition={{
                                                 duration: 2,
                                                 repeat: Infinity,
@@ -529,10 +536,10 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                                 {user.email?.charAt(0).toUpperCase() || 'U'}
                                             </AvatarFallback>
                                         </Avatar>
-                                        {/* Online indicator */}
+                                        {/* Online indicator - no animation on mobile */}
                                         <motion.div
                                             className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 border-2 border-zinc-900 rounded-full"
-                                            animate={{ scale: [1, 1.2, 1] }}
+                                            animate={!prefersReducedMotion && window.innerWidth > 768 ? { scale: [1, 1.2, 1] } : {}}
                                             transition={{ duration: 2, repeat: Infinity }}
                                         />
                                     </Button>
@@ -562,7 +569,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                                 {user.email}
                                             </p>
                                             <div className="flex items-center gap-1 mt-1">
-                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                                <div className={`w-2 h-2 bg-emerald-500 rounded-full ${!prefersReducedMotion ? 'animate-pulse' : ''}`} />
                                                 <span className="text-xs text-emerald-400">Online</span>
                                             </div>
                                         </div>
@@ -637,64 +644,22 @@ export default function AnimatedHeader({ user, onSignOut }) {
             </div>
             </motion.header>
 
-            {/* Enhanced Mobile Navigation Drawer */}
-            <AnimatePresence>
+            {/* Optimized Mobile Navigation Drawer */}
+            <AnimatePresence mode="wait">
                 {isMobileMenuOpen && (
                     <motion.div
                         variants={mobileMenuVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="fixed inset-y-0 right-0 w-full max-w-sm bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border-l border-zinc-800/50 shadow-2xl z-50 flex flex-col lg:hidden overflow-hidden"
+                        className="fixed inset-y-0 right-0 w-full max-w-sm bg-zinc-950 border-l border-zinc-800/50 shadow-2xl z-50 flex flex-col lg:hidden"
+                        // Use transform3d for better mobile performance
+                        style={{ transform: 'translate3d(0, 0, 0)' }}
                     >
-                        {/* Animated Background */}
-                        <div className="absolute inset-0 overflow-hidden">
-                            {/* Gradient Background Animation */}
-                            <motion.div
-                                className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-purple-500/3 to-indigo-500/5"
-                                animate={{
-                                    background: [
-                                        "linear-gradient(135deg, rgba(139,69,255,0.05) 0%, rgba(147,51,234,0.03) 50%, rgba(99,102,241,0.05) 100%)",
-                                        "linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(139,69,255,0.03) 50%, rgba(147,51,234,0.05) 100%)",
-                                        "linear-gradient(135deg, rgba(147,51,234,0.05) 0%, rgba(99,102,241,0.03) 50%, rgba(139,69,255,0.05) 100%)",
-                                        "linear-gradient(135deg, rgba(139,69,255,0.05) 0%, rgba(147,51,234,0.03) 50%, rgba(99,102,241,0.05) 100%)"
-                                    ]
-                                }}
-                                transition={{
-                                    duration: 10,
-                                    repeat: Infinity,
-                                    ease: "linear"
-                                }}
-                            />
-
-                            {/* Floating Orbs */}
-                            {[...Array(4)].map((_, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="absolute rounded-full opacity-10"
-                                    style={{
-                                        background: `radial-gradient(circle, ${
-                                            i % 2 === 0 ? 'rgba(139,69,255,0.2)' : 'rgba(99,102,241,0.2)'
-                                        } 0%, transparent 70%)`,
-                                        width: `${60 + i * 20}px`,
-                                        height: `${60 + i * 20}px`,
-                                        right: `${-30 + i * 10}%`,
-                                        top: `${10 + i * 20}%`,
-                                    }}
-                                    animate={{
-                                        x: [0, 30, 0],
-                                        y: [0, -20, 0],
-                                        scale: [1, 1.1, 1],
-                                        opacity: [0.05, 0.15, 0.05]
-                                    }}
-                                    transition={{
-                                        duration: 8 + i * 2,
-                                        repeat: Infinity,
-                                        ease: "easeInOut",
-                                        delay: i * 1.5
-                                    }}
-                                />
-                            ))}
+                        {/* Simplified Background for Mobile - Static only */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+                            {/* Static gradient for mobile performance */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/3 via-purple-500/2 to-indigo-500/3" />
                         </div>
 
                         {/* Header */}
@@ -706,45 +671,23 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 className="flex items-center gap-3"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 }}
+                                transition={{ delay: 0.1 }}
                             >
                                 <motion.div 
                                     className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/25"
-                                    animate={{
-                                        rotate: [0, 5, -5, 0],
-                                        scale: [1, 1.05, 1]
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
                                 >
                                     <Wallet className="w-4 h-4 text-white" />
                                 </motion.div>
                                 <div>
-                                    <motion.h2 
-                                        className="text-lg font-bold bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent"
-                                        animate={{
-                                            backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                                        }}
-                                        transition={{
-                                            duration: 4,
-                                            repeat: Infinity,
-                                            ease: "linear"
-                                        }}
-                                        style={{
-                                            backgroundSize: "200% 100%"
-                                        }}
-                                    >
+                                    <h2 className="text-lg font-bold text-white">
                                         Navigation
-                                    </motion.h2>
+                                    </h2>
                                     <p className="text-xs text-zinc-400">Fintrack</p>
                                 </div>
                             </motion.div>
                             <motion.div
-                                whileHover={{ scale: 1.05, rotate: 90 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 <Button
                                     variant="ghost"
@@ -757,7 +700,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             </motion.div>
                         </motion.div>
 
-                        {/* Navigation Links - LinkTree Style */}
+                        {/* Optimized Navigation Links */}
                         <motion.nav
                             className="flex-1 p-4 space-y-3 overflow-y-auto relative z-10"
                             variants={mobileItemVariants}
@@ -770,142 +713,61 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                     <motion.div
                                         key={link.path}
                                         variants={mobileItemVariants}
-                                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                        initial={{ opacity: 0, y: 20 }}
                                         animate={{ 
                                             opacity: 1, 
-                                            y: 0, 
-                                            scale: 1,
+                                            y: 0,
                                             transition: { 
-                                                delay: 0.1 + index * 0.1,
-                                                type: "spring",
-                                                stiffness: 200,
-                                                damping: 20
+                                                delay: 0.05 + index * 0.05,
+                                                duration: 0.3,
+                                                ease: "easeOut"
                                             }
                                         }}
                                         whileHover={{ 
-                                            scale: 1.03, 
-                                            x: 8,
+                                            scale: 1.02, 
+                                            x: 4,
                                             transition: { duration: 0.2 }
                                         }}
-                                        whileTap={{ scale: 0.97 }}
+                                        whileTap={{ scale: 0.98 }}
                                         className="relative"
                                     >
-                                        {/* LinkTree-style background glow */}
-                                        <motion.div
-                                            className="absolute inset-0 rounded-2xl opacity-0 bg-gradient-to-r from-violet-500/20 to-purple-500/20"
-                                            whileHover={{ opacity: 1 }}
-                                            transition={{ duration: 0.3 }}
-                                        />
-
                                         <Link
                                             to={link.path}
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 overflow-hidden ${active
-                                                    ? `bg-gradient-to-r ${link.color} text-white shadow-xl shadow-current/30 border border-white/20`
+                                            className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ${active
+                                                    ? `bg-gradient-to-r ${link.color} text-white shadow-xl shadow-current/20 border border-white/10`
                                                     : "text-zinc-300 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 hover:border-zinc-600/50"
                                                 }`}
                                         >
-                                            {/* Shimmer effect */}
-                                            <motion.div
-                                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
-                                                animate={{
-                                                    x: [-100, 300]
-                                                }}
-                                                transition={{
-                                                    duration: 3,
-                                                    repeat: Infinity,
-                                                    repeatDelay: 5,
-                                                    ease: "easeInOut"
-                                                }}
-                                            />
+                                            {/* No shimmer effect on mobile for performance */}
 
-                                            {/* Icon container */}
-                                            <motion.div 
+                                            {/* Icon container - no animations on mobile */}
+                                            <div 
                                                 className={`relative p-2.5 rounded-xl ${active
-                                                        ? "bg-white/25 shadow-lg"
+                                                        ? "bg-white/20 shadow-lg"
                                                         : "bg-zinc-700/50"
                                                     }`}
-                                                animate={active ? {
-                                                    rotate: [0, 5, -5, 0],
-                                                    scale: [1, 1.1, 1]
-                                                } : {}}
-                                                transition={{
-                                                    duration: 3,
-                                                    repeat: Infinity,
-                                                    repeatDelay: 2,
-                                                    ease: "easeInOut"
-                                                }}
-                                                whileHover={{
-                                                    scale: 1.15,
-                                                    rotate: 10,
-                                                    transition: { duration: 0.2 }
-                                                }}
                                             >
                                                 <Icon className="w-5 h-5 relative z-10" />
-                                                
-                                                {/* Icon glow */}
-                                                {active && (
-                                                    <motion.div
-                                                        className="absolute inset-0 rounded-xl bg-white/20"
-                                                        animate={{
-                                                            scale: [1, 1.2, 1],
-                                                            opacity: [0.5, 0.8, 0.5]
-                                                        }}
-                                                        transition={{
-                                                            duration: 2,
-                                                            repeat: Infinity,
-                                                            ease: "easeInOut"
-                                                        }}
-                                                    />
-                                                )}
-                                            </motion.div>
+                                            </div>
 
                                             <span className="flex-1 relative z-10">{link.name}</span>
 
-                                            {/* Active indicator */}
+                                            {/* Active indicator - simplified */}
                                             {active && (
                                                 <motion.div
                                                     className="flex-shrink-0 relative"
-                                                    initial={{ scale: 0, rotate: -180 }}
-                                                    animate={{ 
-                                                        scale: 1, 
-                                                        rotate: 0,
-                                                        transition: { 
-                                                            type: "spring", 
-                                                            stiffness: 300,
-                                                            delay: 0.2 
-                                                        }
-                                                    }}
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ duration: 0.2 }}
                                                 >
-                                                    <motion.div
-                                                        animate={{
-                                                            rotate: [0, 360],
-                                                            scale: [1, 1.2, 1]
-                                                        }}
-                                                        transition={{
-                                                            duration: 4,
-                                                            repeat: Infinity,
-                                                            ease: "easeInOut"
-                                                        }}
-                                                    >
-                                                        <Star className="w-4 h-4 text-white drop-shadow-lg" />
-                                                    </motion.div>
+                                                    <Star className="w-4 h-4 text-white" />
                                                 </motion.div>
                                             )}
 
-                                            {/* Hover arrow */}
+                                            {/* Static arrow for non-active items */}
                                             {!active && (
-                                                <motion.div
-                                                    className="flex-shrink-0 opacity-0"
-                                                    whileHover={{ 
-                                                        opacity: 1,
-                                                        x: [0, 5, 0],
-                                                        transition: { 
-                                                            opacity: { duration: 0.2 },
-                                                            x: { duration: 1, repeat: Infinity }
-                                                        }
-                                                    }}
-                                                >
+                                                <div className="flex-shrink-0 opacity-40">
                                                     <svg 
                                                         className="w-4 h-4 text-zinc-400" 
                                                         fill="none" 
@@ -919,7 +781,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                                             d="M9 5l7 7-7 7" 
                                                         />
                                                     </svg>
-                                                </motion.div>
+                                                </div>
                                             )}
                                         </Link>
                                     </motion.div>
@@ -931,14 +793,17 @@ export default function AnimatedHeader({ user, onSignOut }) {
                         {user && (
                             <motion.div
                                 variants={mobileItemVariants}
-                                className="p-4 border-t border-zinc-800/50"
+                                className="p-4 border-t border-zinc-800/50 relative z-10"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
                             >
                                 <Button
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
                                         onSignOut();
                                     }}
-                                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold flex items-center justify-center gap-3 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-red-500/25"
+                                    className="w-full mb-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold flex items-center justify-center gap-3 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-red-500/25"
                                 >
                                     <LogOut className="w-5 h-5" />
                                     Sign Out
