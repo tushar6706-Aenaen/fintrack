@@ -130,7 +130,7 @@ function formatCurrency(n) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
     }).format(Number(n));
 }
 

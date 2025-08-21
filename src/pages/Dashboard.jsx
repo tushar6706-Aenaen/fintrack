@@ -60,30 +60,14 @@ function formatCurrency(n) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
     }).format(Number(n));
 }
 
 // Animation variants
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            delayChildren: 0.1,
-            staggerChildren: 0.1
-        }
-    }
-};
 
-const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-        y: 0,
-        opacity: 1,
-        transition: { duration: 0.5 }
-    }
-};
+
+
 
 const cardHoverVariants = {
     rest: { scale: 1, y: 0 },
@@ -580,13 +564,7 @@ export default function Dashboard() {
     const todayTrend = todaySpent > yesterdaySpent ? 'up' : todaySpent < yesterdaySpent ? 'down' : 'neutral';
     const trendPercentage = yesterdaySpent > 0 ? Math.abs(((todaySpent - yesterdaySpent) / yesterdaySpent) * 100) : 0;
 
-    // Mock savings goals for analytics tab (even if not explicitly used, keeping for structure)
-    const savingsGoals = useMemo(() => [
-        { id: 1, name: "New Laptop", target: 80000, current: 55000, progressColor: "emerald" },
-        { id: 2, name: "Vacation Fund", target: 120000, current: 30000, progressColor: "blue" },
-        { id: 3, name: "Emergency Fund", target: 200000, current: 180000, progressColor: "violet" },
-    ], []);
-
+    
 
     // Loading state
     if (authLoading || loading) {
