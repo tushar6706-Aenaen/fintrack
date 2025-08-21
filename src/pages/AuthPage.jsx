@@ -134,21 +134,21 @@ export default function AuthPage() {
 
     return (
         <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-            <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-xl">
+            <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 shadow-xl">
                 <CardHeader className="text-center pb-6">
-                    <CardTitle className="text-3xl font-bold text-slate-50">
+                    <CardTitle className="text-3xl font-bold text-zinc-50">
                         {isSignUp ? "Create Account" : "Welcome Back!"}
                     </CardTitle>
-                    <p className="text-slate-400 mt-2">
+                    <p className="text-zinc-400 mt-2">
                         {isSignUp ? "Sign up to start tracking your expenses" : "Sign in to your account"}
                     </p>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium text-slate-300">Email</label>
+                            <label htmlFor="email" className="text-sm font-medium text-zinc-300">Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -157,14 +157,14 @@ export default function AuthPage() {
                                     placeholder="your@email.com"
                                     required
                                     disabled={loading}
-                                    className="pl-10 bg-slate-800 border-slate-700 text-slate-100 focus:ring-blue-500 focus:border-blue-500"
+                                    className="pl-10 bg-zinc-800 border-zinc-700 text-zinc-100 focus:ring-zinc-500 focus:border-zinc-500"
                                 />
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label htmlFor="password" className="text-sm font-medium text-slate-300">Password</label>
+                            <label htmlFor="password" className="text-sm font-medium text-zinc-300">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-500" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500" />
                                 <Input
                                     id="password"
                                     type="password"
@@ -174,7 +174,7 @@ export default function AuthPage() {
                                     required
                                     disabled={loading}
                                     minLength={6}
-                                    className="pl-10 bg-slate-800 border-slate-700 text-slate-100 focus:ring-blue-500 focus:border-blue-500"
+                                    className="pl-10 bg-zinc-800 border-zinc-700 text-zinc-100 focus:ring-zinc-500 focus:border-zinc-500"
                                 />
                             </div>
                         </div>
@@ -193,7 +193,7 @@ export default function AuthPage() {
 
                         <Button
                             type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                            className="w-full bg-zinc-200  hover:bg-zinc-700 text-black font-bold py-2.5 rounded-lg transition-colors"
                             disabled={loading}
                         >
                             {loading ? (
@@ -213,7 +213,7 @@ export default function AuthPage() {
                         </Button>
                     </form>
 
-                    <p className="text-center text-slate-400 text-sm mt-6">
+                    <p className="text-center text-zinc-400 text-sm mt-6">
                         {isSignUp ? (
                             <>
                                 Already have an account?{" "}
@@ -224,7 +224,7 @@ export default function AuthPage() {
                                         setError("");
                                         setMessage("");
                                     }}
-                                    className="text-blue-500 hover:underline font-medium"
+                                    className="text-white hover:underline font-medium"
                                 >
                                     Sign In
                                 </button>
@@ -239,7 +239,7 @@ export default function AuthPage() {
                                         setError("");
                                         setMessage("");
                                     }}
-                                    className="text-blue-500 hover:underline font-medium"
+                                    className="text-white hover:underline font-medium"
                                 >
                                     Sign Up
                                 </button>
