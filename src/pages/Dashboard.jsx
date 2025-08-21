@@ -27,6 +27,7 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     MoreHorizontal,
+    Filter,
     Wallet,
     PieChart, // Added for potential future use in analytics
     BarChart3, // Added for potential future use in overview
@@ -642,7 +643,7 @@ export default function Dashboard() {
 
                 {/* Debug Info (Remove in production) */}
                 {/* <div className="mb-4 p-3 bg-zinc-800 rounded-lg text-xs text-zinc-400">
-                    <div>Supabase User ID: {user?.id}</div>
+                    <div>Supabase User ID: {user?.id}</div> Changed Clerk to Supabase
                     <div>Using ID: {userId}</div>
                     <div>Expenses: {expenses.length}</div>
                     <div>Categories: {categories.length}</div>
@@ -669,6 +670,10 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
+                            <Filter className="w-4 h-4 mr-2" />
+                            Filter
+                        </Button>
                         <Button onClick={() => setOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Expense

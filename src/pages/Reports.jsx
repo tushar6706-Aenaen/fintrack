@@ -4,7 +4,7 @@ import { subDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "d
 import { motion, AnimatePresence } from "framer-motion"; // Import motion from framer-motion
 import { callGeminiApi } from '@/lib/geminiApi';
 import {
-    Search, Filter, Download, Calendar, TrendingUp, Users, Activity, ChevronDown, Eye, FileText, PieChart, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight,
+    Search, Filter, Download, Calendar, TrendingUp, Users, DollarSign, Activity, ChevronDown, Eye, FileText, PieChart, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight,
     Target, Wallet, CreditCard, Banknote, TrendingDown, Lightbulb, Plus, X
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"; // Import regular Button compon
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import FloatingParticles from '@/components/FloatingParticles';
 
 // Create a MotionButton component by wrapping the shadcn/ui Button
 const MotionButton = motion(Button);
@@ -93,7 +92,7 @@ function formatCurrency(n) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-        maximumFractionDigits: 0,
+        maximumFractionDigits: 2,
     }).format(Number(n));
 }
 
@@ -442,7 +441,7 @@ const ReportsPage = () => {
                 size: 'Live Data',
                 format: 'Interactive',
                 status: 'ready',
-                icon: Banknote,
+                icon: DollarSign,
                 color: 'bg-blue-600',
                 data: incomeBySource
             },
@@ -949,9 +948,7 @@ const ReportsPage = () => {
                 </motion.div>
 
                 {/* Filters and Search */}
-                
-                <Card className="mb-6 bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
-                    <FloatingParticles/>
+                <Card className="mb-6 bg-zinc-900 border-zinc-800">
                     <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 w-4 h-4" />
@@ -985,7 +982,7 @@ const ReportsPage = () => {
                 >
                     {quickStats.map((stat, index) => (
                         <motion.div key={stat.label} variants={statCardVariants} whileHover="hover">
-                            <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
+                            <Card className="bg-zinc-900 border-zinc-800">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium text-zinc-400">
                                         {stat.label}
@@ -1094,7 +1091,7 @@ const ReportsPage = () => {
                 </motion.div>
 
                 {/* Reports List */}
-                <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800">
+                <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader>
                         <CardTitle className="text-zinc-50">Generated Reports</CardTitle>
                     </CardHeader>
@@ -1126,7 +1123,7 @@ const ReportsPage = () => {
                                         whileHover="hover"
                                         layout
                                     >
-                                        <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-700 h-full flex flex-col">
+                                        <Card className="bg-zinc-800 border-zinc-700 h-full flex flex-col">
                                             <CardHeader className="flex-row items-center justify-between pb-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${report.color}`}>

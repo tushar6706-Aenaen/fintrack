@@ -7,7 +7,7 @@ import {
   Edit,
   Trash2,
   Calendar,
-  Banknote,
+  DollarSign,
   Tag,
   CreditCard,
   AlertCircle,
@@ -47,7 +47,7 @@ function formatCurrency(n) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(Number(n));
 }
 
@@ -638,7 +638,7 @@ export default function Expenses() {
                         {formatCurrency(filteredExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0))}
                       </p>
                     </div>
-                    <Banknote className="w-8 h-8 text-blue-400" />
+                    <DollarSign className="w-8 h-8 text-blue-400" />
                   </div>
                 </CardContent>
               </Card>

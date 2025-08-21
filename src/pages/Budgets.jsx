@@ -11,7 +11,7 @@ import {
     Edit,
     Trash2,
     Calendar,
-    Banknote,
+    DollarSign,
     AlertTriangle,
     CheckCircle,
     Activity,
@@ -27,7 +27,6 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -131,12 +130,11 @@ function formatCurrency(n) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-        maximumFractionDigits: 0,
+        maximumFractionDigits: 2,
     }).format(Number(n));
 }
 
 export default function Budgets() {
-    const { toast } = useToast();
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
 
@@ -446,7 +444,7 @@ export default function Budgets() {
                 period_type: formData.period_type,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                category_id: formData.category_id === "all" ? null : formData.category_id, // Convert "all" to null
+                category_id: formData.category_id || null, // Allow null for all categories
                 alert_threshold: threshold / 100, // Convert percentage to decimal
                 is_active: true
             };
@@ -469,21 +467,8 @@ export default function Budgets() {
     };
     const handleEditBudget = async (e) => {
         e.preventDefault();
-        setError(""); // Clear any previous errors
-
-        if (!user?.id) {
-            setError("Authentication error: User not logged in.");
-            return;
-        }
-
-        if (!selectedBudget) {
-            setError("No budget selected for editing.");
-            return;
-        }
-
-        // Validate form data
-        if (!formData.name.trim()) {
-            setError("Budget name is required.");
+        if (!selectedBudget || !formData.name.trim() || !formData.amount || !formData.start_date || !formData.end_date) {
+            setError("Please fill all required fields (Name, Amount, Start Date, End Date).");
             return;
         }
 
@@ -493,13 +478,8 @@ export default function Budgets() {
             return;
         }
 
-        if (!formData.start_date || !formData.end_date) {
-            setError("Please select both start and end dates.");
-            return;
-        }
-
-        const threshold = parseFloat(formData.alert_threshold);
-        if (Number.isNaN(threshold) || threshold <= 0 || threshold > 100) {
+        const threshold = parseFloat(formData.alert_threshold) / 100;
+        if (Number.isNaN(threshold) || threshold <= 0 || threshold > 1) {
             setError("Alert threshold must be between 1 and 100.");
             return;
         }
@@ -518,35 +498,27 @@ export default function Budgets() {
                 period_type: formData.period_type,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                category_id: formData.category_id === "all" ? null : formData.category_id,
-                alert_threshold: threshold / 100, // Convert percentage to decimal
+                category_id: formData.category_id || null,
+                alert_threshold: threshold,
                 updated_at: new Date().toISOString()
             };
 
-            console.log("Updating budget with payload:", payload);
-            console.log("Selected budget ID:", selectedBudget.id);
-
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from("budgets")
                 .update(payload)
                 .eq("id", selectedBudget.id)
-                .eq("user_id", user.id)
-                .select(); // Add select to get the updated data back
+                .eq("user_id", user.id);
 
             if (error) {
-                console.error("Supabase error:", error);
                 setError(`Failed to update budget: ${error.message}`);
             } else {
-                console.log("Budget updated successfully:", data);
-                toast({
-                    title: "Budget Updated",
-                    description: "Your budget has been successfully updated.",
-                });
-                closeEditModal();
-                await loadBudgets(); // Refresh the list
+                resetForm();
+                setShowEditModal(false);
+                setSelectedBudget(null);
+                setError("");
+                await loadBudgets();
             }
         } catch (err) {
-            console.error("Unexpected error in handleEditBudget:", err);
             setError(`Unexpected error: ${err.message}`);
         } finally {
             setSubmitting(false);
@@ -580,31 +552,22 @@ export default function Budgets() {
     };
 
     const openEditModal = (budget) => {
-        setError(""); // Clear any previous errors
         setSelectedBudget(budget);
-        const newFormData = {
+        setFormData({
             name: budget.name,
             amount: budget.amount.toString(),
             period_type: budget.period_type,
             start_date: budget.start_date,
             end_date: budget.end_date,
-            category_id: budget.categories?.id || "all", // Use "all" instead of empty string
+            category_id: budget.categories?.id || "",
             alert_threshold: (budget.alert_threshold * 100).toString()
-        };
-        setFormData(newFormData);
+        });
         setShowEditModal(true);
     };
 
     const openDeleteModal = (budget) => {
         setSelectedBudget(budget);
         setShowDeleteModal(true);
-    };
-
-    const closeEditModal = () => {
-        setShowEditModal(false);
-        setSelectedBudget(null);
-        setError("");
-        resetForm();
     };
 
     // Calculate overall stats
@@ -773,7 +736,7 @@ export default function Budgets() {
                                     title: "Remaining",
                                     value: formatCurrency(totalRemaining),
                                     subtitle: "Available to spend",
-                                    icon: Banknote,
+                                    icon: DollarSign,
                                     color: "green"
                                 },
                                 {
@@ -950,7 +913,7 @@ export default function Budgets() {
                                                                                 animate={{ opacity: 1, y: 0 }}
                                                                                 transition={{ delay: 0.3 + index * 0.05 }}
                                                                             >
-                                                                                <Banknote className="w-3 h-3" />
+                                                                                <DollarSign className="w-3 h-3" />
                                                                                 {formatCurrency(budget.amount)} budget
                                                                             </motion.span>
                                                                             {budget.categories && (
@@ -1297,7 +1260,7 @@ export default function Budgets() {
                 <AnimatePresence>
                     {showEditModal && selectedBudget && (
                         <motion.div
-                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
                             variants={overlayVariants}
                             initial="hidden"
                             animate="visible"
@@ -1308,11 +1271,11 @@ export default function Budgets() {
                                 variants={modalVariants}
                             >
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-2xl font-bold text-zinc-50">Edit Budget: {selectedBudget?.name}</h2>
+                                    <h2 className="text-2xl font-bold text-zinc-50">Edit Budget</h2>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={closeEditModal}
+                                        onClick={() => setShowEditModal(false)}
                                         className="text-zinc-400 hover:bg-zinc-800"
                                     >
                                         <X className="h-5 w-5" />
@@ -1354,7 +1317,7 @@ export default function Budgets() {
                                                 <SelectValue placeholder="All Categories" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-50">
-                                                <SelectItem value="all">All Categories</SelectItem>
+                                                <SelectItem value="">All Categories</SelectItem>
                                                 {categories.map(category => (
                                                     <SelectItem key={category.id} value={category.id}>
                                                         <div className="flex items-center gap-2">
@@ -1453,7 +1416,7 @@ export default function Budgets() {
                                         <Button
                                             type="button"
                                             variant="secondary"
-                                            onClick={closeEditModal}
+                                            onClick={() => setShowEditModal(false)}
                                             className="bg-zinc-700 text-zinc-50 hover:bg-zinc-600"
                                             disabled={submitting}
                                         >
