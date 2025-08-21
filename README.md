@@ -30,7 +30,11 @@ Framer Motion
 
 Backend & Database
 
+<<<<<<< HEAD
 Supabase (Postgres, Auth, Realtime)
+=======
+Supabase (Postgres, Auth, API)
+>>>>>>> e4566042dbe3f04123b075741c722cfc57a5593f
 
 Deployment
 
@@ -38,6 +42,7 @@ Frontend → Vercel / Netlify
 
 Backend + Database → Supabase
 
+<<<<<<< HEAD
 📂 Project Structure /src ├── components → UI components (shadcn + custom) ├── pages → App pages (Dashboard, Login, Register, etc.) ├── hooks → Custom React hooks ├── lib → Supabase client setup ├── context → Auth & App context └── utils → Helpers & formatters
 
 ⚙️ Installation & Setup
@@ -53,6 +58,35 @@ Create a .env file in the root:
 VITE_SUPABASE_URL=your_supabase_project_url VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 Run the app npm run dev
+=======
+📂 Project Structure
+/src
+ ├── components   → UI components (shadcn + custom)
+ ├── pages        → App pages (Dashboard, Login, Register, etc.)
+ ├── hooks        → Custom React hooks
+ ├── lib          → Supabase client setup
+ ├── context      → Auth & App context
+ └── utils        → Helpers & formatters
+
+⚙️ Installation & Setup
+1. Clone the repo
+git clone https://github.com/your-username/expense-tracker.git
+cd expense-tracker
+
+2. Install dependencies
+npm install
+
+3. Setup environment variables
+
+Create a .env file in the root:
+
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+4. Run the app
+npm run dev
+
+>>>>>>> e4566042dbe3f04123b075741c722cfc57a5593f
 📸 Screenshots (to be added)
 
 Dashboard View
@@ -65,6 +99,7 @@ Analytics Charts
 
 📌 Roadmap
 
+<<<<<<< HEAD
 Add recurring expenses
 
 Budget alerts (email/notifications via Supabase)
@@ -74,3 +109,14 @@ Dark mode toggle
 Export data (CSV/PDF)
 
 Mobile app (Expo + Supabase)
+=======
+ Add recurring expenses
+
+ Budget alerts (email/notifications via Supabase)
+
+ Dark mode toggle
+
+ Export data (CSV/PDF)
+
+ Mobile app (Expo + Supabase)
+>>>>>>> e4566042dbe3f04123b075741c722cfc57a5593f
