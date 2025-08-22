@@ -15,7 +15,7 @@ export default function Layout({ user, onSignOut }) {
             <Header user={user} onSignOut={onSignOut} />
 
             {/* The main content area now occupies the remaining space */}
-            <main className="flex-1 overflow-y-auto px-2 py-8 z-10 relative">
+            <main className="flex-1 overflow-y-auto px-2 lg:px-6 py-8 z-10 relative">
                 {/* Add z-10 and relative to main to ensure content stays on top of the particles */}
                 <Outlet /> {/* Renders nested routes (Dashboard, etc.) */}
             </main>
