@@ -592,7 +592,10 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 <DropdownMenuSeparator className="bg-zinc-700/50" />
 
                                 <DropdownMenuItem
-                                    onClick={onSignOut}
+                                    onClick={() => {
+                                        console.log("Desktop logout button clicked");
+                                        onSignOut();
+                                    }}
                                     className="focus:bg-red-950/20 cursor-pointer group"
                                 >
                                     <motion.div
@@ -800,6 +803,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             >
                                 <Button
                                     onClick={() => {
+                                        console.log("Mobile logout button clicked");
                                         setIsMobileMenuOpen(false);
                                         onSignOut();
                                     }}

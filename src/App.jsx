@@ -22,12 +22,19 @@ export default function App() {
         let mounted = true;
 
         const handleAuthStateChange = async (event, session) => {
+            console.log("Auth state change event:", event, "Session:", session?.user?.email || "No user");
+            
             if (mounted) {
                 setUser(session?.user || null);
                 setAuthLoading(false);
-                // Redirect authenticated users away from auth page if they land there
-                if (session?.user && window.location.pathname === "/auth") {
-                    navigate("/");
+                
+                // Handle redirections based on auth state
+                if (event === 'SIGNED_OUT' || !session?.user) {
+                    console.log("User signed out, redirecting to auth page");
+                    navigate("/auth", { replace: true });
+                } else if (session?.user && window.location.pathname === "/auth") {
+                    console.log("User signed in, redirecting to dashboard");
+                    navigate("/", { replace: true });
                 }
             }
         };
@@ -56,11 +63,34 @@ export default function App() {
 
     const handleSignOut = async () => {
         try {
-            await supabase.auth.signOut();
-            // Supabase's onAuthStateChange will handle setting user to null and redirecting
+            console.log("Starting sign out process...");
+            
+            // Clear user state immediately to prevent UI flickering
+            setUser(null);
+            
+            // Sign out from Supabase with scope 'global' to clear all sessions
+            const { error } = await supabase.auth.signOut({ scope: 'global' });
+            
+            if (error) {
+                console.error("Supabase sign out error:", error);
+                // Continue with cleanup even if there's an error
+            }
+            
+            // Clear any remaining local storage
+            localStorage.removeItem('supabase.auth.token');
+            
+            console.log("Sign out successful, redirecting to auth page");
+            
+            // Force navigation to auth page with replace to prevent back navigation
+            navigate("/auth", { replace: true });
+            
         } catch (error) {
             console.error("Error signing out:", error);
-            // Optionally, show a toast or message to the user
+            
+            // Even if there's an error, try to clear local state and redirect
+            setUser(null);
+            localStorage.removeItem('supabase.auth.token');
+            navigate("/auth", { replace: true });
         }
     };
 
