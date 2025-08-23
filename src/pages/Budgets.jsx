@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabaseClient";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import {
     Plus,
     AlertCircle,
@@ -27,10 +28,10 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Animation variants
 const containerVariants = {
@@ -137,6 +138,7 @@ function formatCurrency(n) {
 export default function Budgets() {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const { toast } = useToast();
 
     const [budgets, setBudgets] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -158,7 +160,7 @@ export default function Budgets() {
         period_type: "monthly",
         start_date: format(startOfMonth(new Date()), "yyyy-MM-dd"),
         end_date: format(endOfMonth(new Date()), "yyyy-MM-dd"),
-        category_id: "",
+        category_id: "all",
         alert_threshold: "80"
     });
 
@@ -367,7 +369,7 @@ export default function Budgets() {
             period_type: "monthly",
             start_date: format(startOfMonth(new Date()), "yyyy-MM-dd"),
             end_date: format(endOfMonth(new Date()), "yyyy-MM-dd"),
-            category_id: "",
+            category_id: "all",
             alert_threshold: "80"
         });
     };
@@ -412,26 +414,51 @@ export default function Budgets() {
 
         if (!user?.id) {
             setError("Authentication error: User not logged in.");
+            toast({
+                title: "Authentication Error",
+                description: "User not logged in. Please sign in and try again.",
+                variant: "destructive",
+            });
             return;
         }
 
         // Validate form data
         if (!formData.name.trim()) {
             setError("Budget name is required.");
+            toast({
+                title: "Validation Error",
+                description: "Budget name is required.",
+                variant: "destructive",
+            });
             return;
         }
         const parsedAmount = parseFloat(formData.amount);
         if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
             setError("Amount must be a positive number.");
+            toast({
+                title: "Invalid Amount",
+                description: "Amount must be a positive number.",
+                variant: "destructive",
+            });
             return;
         }
         const threshold = parseFloat(formData.alert_threshold);
         if (Number.isNaN(threshold) || threshold <= 0 || threshold > 100) {
             setError("Alert threshold must be between 1 and 100.");
+            toast({
+                title: "Invalid Threshold",
+                description: "Alert threshold must be between 1 and 100.",
+                variant: "destructive",
+            });
             return;
         }
         if (new Date(formData.start_date) > new Date(formData.end_date)) {
             setError("Start date cannot be after end date.");
+            toast({
+                title: "Invalid Date Range",
+                description: "Start date cannot be after end date.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -444,7 +471,7 @@ export default function Budgets() {
                 period_type: formData.period_type,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                category_id: formData.category_id || null, // Allow null for all categories
+                category_id: formData.category_id === "all" ? null : formData.category_id, // Allow null for all categories
                 alert_threshold: threshold / 100, // Convert percentage to decimal
                 is_active: true
             };
@@ -453,14 +480,29 @@ export default function Budgets() {
 
             if (error) {
                 setError(`Failed to add budget: ${error.message}`);
+                toast({
+                    title: "Failed to Add Budget",
+                    description: error.message,
+                    variant: "destructive",
+                });
             } else {
                 resetForm();
                 setShowAddModal(false);
                 await loadBudgets(); // Refresh the list
+                toast({
+                    title: "Budget Added Successfully",
+                    description: `Created budget "${formData.name}" with ₹${parsedAmount.toLocaleString()} limit.`,
+                    variant: "success",
+                });
             }
         } catch (err) {
             console.error("Unexpected error in handleAddBudget:", err);
             setError(`Unexpected error: ${err.message}`);
+            toast({
+                title: "Unexpected Error",
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -498,7 +540,7 @@ export default function Budgets() {
                 period_type: formData.period_type,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                category_id: formData.category_id || null,
+                category_id: formData.category_id === "all" ? null : formData.category_id,
                 alert_threshold: threshold,
                 updated_at: new Date().toISOString()
             };
@@ -559,7 +601,7 @@ export default function Budgets() {
             period_type: budget.period_type,
             start_date: budget.start_date,
             end_date: budget.end_date,
-            category_id: budget.categories?.id || "",
+            category_id: budget.categories?.id || "all",
             alert_threshold: (budget.alert_threshold * 100).toString()
         });
         setShowEditModal(true);
@@ -1125,7 +1167,7 @@ export default function Budgets() {
                                             onValueChange={(value) => {
                                                 setFormData((prev) => ({
                                                     ...prev,
-                                                    category_id: value === "all" ? "" : value, // Handle the "all" value
+                                                    category_id: value, // Keep the value as is (either "all" or category id)
                                                 }));
                                             }}
                                         >
@@ -1257,184 +1299,163 @@ export default function Budgets() {
                 </AnimatePresence>
 
                 {/* Edit Budget Modal */}
-                <AnimatePresence>
-                    {showEditModal && selectedBudget && (
-                        <motion.div
-                            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-                            variants={overlayVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                        >
-                            <motion.div
-                                className="w-full max-w-lg bg-zinc-900 rounded-lg p-6 shadow-2xl border border-zinc-800"
-                                variants={modalVariants}
-                            >
-                                <div className="flex items-center justify-between mb-4">
-                                    <h2 className="text-2xl font-bold text-zinc-50">Edit Budget</h2>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => setShowEditModal(false)}
-                                        className="text-zinc-400 hover:bg-zinc-800"
-                                    >
-                                        <X className="h-5 w-5" />
-                                    </Button>
+                <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+                    <DialogContent className="w-full max-w-lg bg-zinc-900 border-zinc-800">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold text-zinc-50">Edit Budget</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleEditBudget} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-name" className="text-zinc-400">Budget Name</Label>
+                                    <Input
+                                        id="edit-name"
+                                        type="text"
+                                        placeholder="e.g., Monthly Groceries"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
+                                    />
                                 </div>
-                                <form onSubmit={handleEditBudget} className="space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="edit-name" className="text-zinc-400">Budget Name</Label>
-                                            <Input
-                                                id="edit-name"
-                                                type="text"
-                                                placeholder="e.g., Monthly Groceries"
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="edit-amount" className="text-zinc-400">Budget Amount (₹)</Label>
-                                            <Input
-                                                id="edit-amount"
-                                                type="number"
-                                                placeholder="10000"
-                                                value={formData.amount}
-                                                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                                className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
-                                            />
-                                        </div>
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-amount" className="text-zinc-400">Budget Amount (₹)</Label>
+                                    <Input
+                                        id="edit-amount"
+                                        type="number"
+                                        placeholder="10000"
+                                        value={formData.amount}
+                                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                        className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
+                                    />
+                                </div>
+                            </div>
 
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-category" className="text-zinc-400">Category (Optional)</Label>
+                                <Select
+                                    value={formData.category_id}
+                                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                                >
+                                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-50">
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-50">
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {categories.map(category => (
+                                            <SelectItem key={category.id} value={category.id}>
+                                                <div className="flex items-center gap-2">
+                                                    <Folder className="h-4 w-4" /> {category.name}
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-period" className="text-zinc-400">Period Type</Label>
+                                <Select
+                                    value={formData.period_type}
+                                    onValueChange={handlePeriodChange}
+                                >
+                                    <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-50">
+                                        <SelectValue placeholder="Select period" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-50">
+                                        {periodOptions.map(option => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {formData.period_type === "custom" && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="edit-category" className="text-zinc-400">Category (Optional)</Label>
-                                        <Select
-                                            value={formData.category_id}
-                                            onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                                        >
-                                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-50">
-                                                <SelectValue placeholder="All Categories" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-50">
-                                                <SelectItem value="">All Categories</SelectItem>
-                                                {categories.map(category => (
-                                                    <SelectItem key={category.id} value={category.id}>
-                                                        <div className="flex items-center gap-2">
-                                                            {category.icon || <Folder className="h-4 w-4" />} {category.name}
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="edit-start_date" className="text-zinc-400">Start Date</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn("w-full justify-start text-left font-normal bg-zinc-800 border-zinc-700 text-zinc-50", !formData.start_date && "text-zinc-500")}
+                                                >
+                                                    <Calendar className="mr-2 h-4 w-4" />
+                                                    {formData.start_date ? format(parseISO(formData.start_date), "PPP") : "Pick a date"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700">
+                                                <DayPicker
+                                                    mode="single"
+                                                    selected={parseISO(formData.start_date)}
+                                                    onSelect={(date) => setFormData({ ...formData, start_date: format(date, "yyyy-MM-dd") })}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
-
                                     <div className="space-y-2">
-                                        <Label htmlFor="edit-period" className="text-zinc-400">Period Type</Label>
-                                        <Select
-                                            value={formData.period_type}
-                                            onValueChange={handlePeriodChange}
-                                        >
-                                            <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-50">
-                                                <SelectValue placeholder="Select period" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-zinc-800 border-zinc-700 text-zinc-50">
-                                                {periodOptions.map(option => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        {option.label}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="edit-end_date" className="text-zinc-400">End Date</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn("w-full justify-start text-left font-normal bg-zinc-800 border-zinc-700 text-zinc-50", !formData.end_date && "text-zinc-500")}
+                                                >
+                                                    <Calendar className="mr-2 h-4 w-4" />
+                                                    {formData.end_date ? format(parseISO(formData.end_date), "PPP") : "Pick a date"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700">
+                                                <DayPicker
+                                                    mode="single"
+                                                    selected={parseISO(formData.end_date)}
+                                                    onSelect={(date) => setFormData({ ...formData, end_date: format(date, "yyyy-MM-dd") })}
+                                                    initialFocus
+                                                    fromMonth={parseISO(formData.start_date)}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
+                                </div>
+                            )}
 
-                                    {formData.period_type === "custom" && (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="edit-start_date" className="text-zinc-400">Start Date</Label>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={"outline"}
-                                                            className={cn("w-full justify-start text-left font-normal bg-zinc-800 border-zinc-700 text-zinc-50", !formData.start_date && "text-zinc-500")}
-                                                        >
-                                                            <Calendar className="mr-2 h-4 w-4" />
-                                                            {formData.start_date ? format(parseISO(formData.start_date), "PPP") : "Pick a date"}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700">
-                                                        <DayPicker
-                                                            mode="single"
-                                                            selected={parseISO(formData.start_date)}
-                                                            onSelect={(date) => setFormData({ ...formData, start_date: format(date, "yyyy-MM-dd") })}
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="edit-end_date" className="text-zinc-400">End Date</Label>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={"outline"}
-                                                            className={cn("w-full justify-start text-left font-normal bg-zinc-800 border-zinc-700 text-zinc-50", !formData.end_date && "text-zinc-500")}
-                                                        >
-                                                            <Calendar className="mr-2 h-4 w-4" />
-                                                            {formData.end_date ? format(parseISO(formData.end_date), "PPP") : "Pick a date"}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700">
-                                                        <DayPicker
-                                                            mode="single"
-                                                            selected={parseISO(formData.end_date)}
-                                                            onSelect={(date) => setFormData({ ...formData, end_date: format(date, "yyyy-MM-dd") })}
-                                                            initialFocus
-                                                            fromMonth={parseISO(formData.start_date)}
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                        </div>
-                                    )}
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-alert_threshold" className="text-zinc-400">Alert Threshold (%)</Label>
+                                <Input
+                                    id="edit-alert_threshold"
+                                    type="number"
+                                    placeholder="80"
+                                    value={formData.alert_threshold}
+                                    onChange={(e) => setFormData({ ...formData, alert_threshold: e.target.value })}
+                                    className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
+                                    min="1"
+                                    max="100"
+                                />
+                            </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="edit-alert_threshold" className="text-zinc-400">Alert Threshold (%)</Label>
-                                        <Input
-                                            id="edit-alert_threshold"
-                                            type="number"
-                                            placeholder="80"
-                                            value={formData.alert_threshold}
-                                            onChange={(e) => setFormData({ ...formData, alert_threshold: e.target.value })}
-                                            className="bg-zinc-800 border-zinc-700 text-zinc-50 placeholder:text-zinc-500"
-                                            min="1"
-                                            max="100"
-                                        />
-                                    </div>
-
-                                    <div className="flex justify-end gap-2 pt-4">
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={() => setShowEditModal(false)}
-                                            className="bg-zinc-700 text-zinc-50 hover:bg-zinc-600"
-                                            disabled={submitting}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200"
-                                            disabled={submitting}
-                                        >
-                                            {submitting ? "Saving..." : "Save Changes"}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="bg-zinc-700 text-zinc-50 hover:bg-zinc-600"
+                                    disabled={submitting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? "Saving..." : "Save Changes"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Delete Budget Modal */}
                 <AnimatePresence>

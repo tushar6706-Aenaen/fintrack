@@ -14,10 +14,7 @@ import {
     X,
     Wallet,
     TrendingUp,
-    Bell,
-    Search,
     Sparkles,
-    Zap,
     Star
 } from "lucide-react";
 
@@ -142,11 +139,10 @@ export default function AnimatedHeader({ user, onSignOut }) {
     const { pathname } = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [searchFocused, setSearchFocused] = useState(false);
     const { scrollY } = useScroll();
     const prefersReducedMotion = useReducedMotion();
 
-    // Handle scroll effects
+    // Handle scroll effects with throttling for better performance
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 50);
     });
@@ -156,17 +152,27 @@ export default function AnimatedHeader({ user, onSignOut }) {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
-    // Prevent body scroll when mobile menu is open
+    // Prevent body scroll when mobile menu is open with cleanup
     useEffect(() => {
         if (isMobileMenuOpen) {
+            const originalStyle = window.getComputedStyle(document.body).overflow;
             document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
+            return () => {
+                document.body.style.overflow = originalStyle;
+            };
         }
+    }, [isMobileMenuOpen]);
 
-        return () => {
-            document.body.style.overflow = 'unset';
+    // Enhanced keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && isMobileMenuOpen) {
+                setIsMobileMenuOpen(false);
+            }
         };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isMobileMenuOpen]);
 
     const getCurrentPageName = () => {
@@ -199,100 +205,8 @@ export default function AnimatedHeader({ user, onSignOut }) {
                         : 'bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-700/30 shadow-xl shadow-black/20'
                     } lg:top-4 lg:mx-auto lg:max-w-5xl lg:border lg:rounded-2xl lg:border-zinc-700/30 relative overflow-hidden`}
             >
-                {/* Simplified Background for Mobile - No animations */}
-                {window.innerWidth > 768 ? (
-                    !prefersReducedMotion && (
-                        <div className="absolute inset-0 overflow-hidden">
-                            {/* Gradient Background Animation - Desktop only */}
-                            <motion.div
-                                className="absolute inset-0"
-                                animate={{
-                                    background: [
-                                        "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)",
-                                        "linear-gradient(90deg, rgba(99,102,241,0.1) 0%, rgba(139,69,255,0.05) 50%, rgba(147,51,234,0.1) 100%)",
-                                        "linear-gradient(90deg, rgba(147,51,234,0.1) 0%, rgba(99,102,241,0.05) 50%, rgba(139,69,255,0.1) 100%)",
-                                        "linear-gradient(90deg, rgba(139,69,255,0.1) 0%, rgba(147,51,234,0.05) 50%, rgba(99,102,241,0.1) 100%)"
-                                    ]
-                                }}
-                                transition={{
-                                    duration: 8,
-                                    repeat: Infinity,
-                                    ease: "linear"
-                                }}
-                            />
-
-                            {/* Floating orbs - Desktop only */}
-                            {[...Array(6)].map((_, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="absolute rounded-full opacity-20"
-                                    style={{
-                                        background: `radial-gradient(circle, ${
-                                            i % 3 === 0 ? 'rgba(139,69,255,0.3)' : 
-                                            i % 3 === 1 ? 'rgba(99,102,241,0.3)' : 'rgba(147,51,234,0.3)'
-                                        } 0%, transparent 70%)`,
-                                        width: `${Math.random() * 60 + 30}px`,
-                                        height: `${Math.random() * 60 + 30}px`,
-                                        left: `${Math.random() * 100}%`,
-                                        top: `${Math.random() * 100}%`,
-                                    }}
-                                    animate={{
-                                        x: [0, Math.random() * 100 - 50, 0],
-                                        y: [0, Math.random() * 50 - 25, 0],
-                                        scale: [1, 1.1, 1],
-                                        opacity: [0.1, 0.2, 0.1]
-                                    }}
-                                    transition={{
-                                        duration: Math.random() * 8 + 4,
-                                        repeat: Infinity,
-                                        ease: "easeInOut",
-                                        delay: i * 2
-                                    }}
-                                />
-                            ))}
-
-                            {/* Sparkle particles - Desktop only */}
-                            {[...Array(8)].map((_, i) => (
-                                <motion.div
-                                    key={`sparkle-${i}`}
-                                    className="absolute w-1 h-1 bg-white rounded-full"
-                                    style={{
-                                        left: `${Math.random() * 100}%`,
-                                        top: `${Math.random() * 100}%`,
-                                    }}
-                                    animate={{
-                                        scale: [0, 1, 0],
-                                        opacity: [0, 1, 0],
-                                        rotate: [0, 180, 360]
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        delay: i * 0.8,
-                                        ease: "easeInOut"
-                                    }}
-                                />
-                            ))}
-
-                            {/* Wave Effect - Desktop only */}
-                            <motion.div
-                                className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"
-                                animate={{
-                                    scaleX: [0, 1, 0],
-                                    opacity: [0, 0.8, 0]
-                                }}
-                                transition={{
-                                    duration: 4,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            />
-                        </div>
-                    )
-                ) : (
-                    /* Static background for mobile */
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-purple-500/3 to-indigo-500/5" />
-                )}
+                {/* Static Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-purple-500/3 to-indigo-500/5" />
 
                 <div className="flex items-center justify-between px-4 py-3 lg:px-6 relative z-10">
                     {/* Left Section - Logo and Title */}
@@ -305,114 +219,24 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             whileHover="hover"
                             whileTap={{ scale: 0.9 }}
                             className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25"
-                            animate={!prefersReducedMotion && window.innerWidth > 768 ? {
-                                boxShadow: [
-                                    "0 8px 25px rgba(139,69,255,0.25)",
-                                    "0 12px 35px rgba(139,69,255,0.4)",
-                                    "0 8px 25px rgba(139,69,255,0.25)"
-                                ],
-                                background: [
-                                    "linear-gradient(135deg, #8b5cf6 0%, #9333ea 50%, #4338ca 100%)",
-                                    "linear-gradient(135deg, #9333ea 0%, #4338ca 50%, #8b5cf6 100%)",
-                                    "linear-gradient(135deg, #4338ca 0%, #8b5cf6 50%, #9333ea 100%)",
-                                    "linear-gradient(135deg, #8b5cf6 0%, #9333ea 50%, #4338ca 100%)"
-                                ]
-                            } : {}}
-                            transition={{
-                                boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                                background: { duration: 6, repeat: Infinity, ease: "linear" }
-                            }}
                         >
-                            <motion.div
-                                animate={!prefersReducedMotion && window.innerWidth > 768 ? { 
-                                    rotate: [0, 5, -5, 0],
-                                    scale: [1, 1.1, 1]
-                                } : {}}
-                                transition={{
-                                    duration: 4,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            >
-                                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white relative z-10" />
-                            </motion.div>
-
-                            {/* Sparkle effects - only on desktop */}
-                            {!prefersReducedMotion && window.innerWidth > 768 && [...Array(3)].map((_, i) => (
-                                <motion.div
-                                    key={i}
-                                    className="absolute w-1 h-1 bg-white rounded-full"
-                                    animate={{
-                                        scale: [0, 1.5, 0],
-                                        opacity: [0, 1, 0],
-                                        rotate: [0, 180, 360]
-                                    }}
-                                    transition={{
-                                        duration: 2.5,
-                                        repeat: Infinity,
-                                        delay: i * 0.8,
-                                        ease: "easeInOut"
-                                    }}
-                                    style={{
-                                        left: `${20 + i * 20}%`,
-                                        top: `${20 + i * 20}%`,
-                                    }}
-                                />
-                            ))}
-
-                            {/* Pulse Ring - only on desktop */}
-                            {!prefersReducedMotion && window.innerWidth > 768 && (
-                                <motion.div
-                                    className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-white/20"
-                                    animate={{
-                                        scale: [1, 1.2, 1],
-                                        opacity: [0.5, 0, 0.5]
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
-                                />
-                            )}
+                            <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white relative z-10" />
                         </motion.div>
 
                         <div className="min-w-0 flex-1">
                             <motion.h1
                                 className="text-white font-bold text-lg sm:text-xl tracking-wide bg-gradient-to-r from-white via-violet-200 to-purple-200 bg-clip-text truncate"
                                 initial={{ opacity: 0, x: -20 }}
-                                animate={{ 
-                                    opacity: 1, 
-                                    x: 0,
-                                    ...(prefersReducedMotion || window.innerWidth <= 768 ? {} : {
-                                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                                    })
-                                }}
-                                transition={{ 
-                                    opacity: { delay: 0.2 },
-                                    x: { delay: 0.2 },
-                                    backgroundPosition: { duration: 5, repeat: Infinity, ease: "linear" }
-                                }}
-                                style={{
-                                    backgroundSize: "200% 100%"
-                                }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 }}
                             >
                                 Fintrack
                             </motion.h1>
                             <motion.p
                                 className="text-xs text-zinc-400 truncate"
                                 initial={{ opacity: 0 }}
-                                animate={{ 
-                                    opacity: (prefersReducedMotion || window.innerWidth <= 768) ? 1 : [0.6, 1, 0.6],
-                                }}
-                                transition={{ 
-                                    opacity: (prefersReducedMotion || window.innerWidth <= 768) ? { delay: 0.4 } : {
-                                        delay: 0.4,
-                                        duration: 2, 
-                                        repeat: Infinity, 
-                                        ease: "easeInOut" 
-                                    }
-                                }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.4 }}
                             >
                                 {getCurrentPageName()}
                             </motion.p>
@@ -443,32 +267,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                             : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
                                         }`}
                                 >
-                                    {/* Animated background shimmer - only on desktop */}
-                                    {!prefersReducedMotion && window.innerWidth > 768 && (
-                                        <motion.div
-                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
-                                            animate={{
-                                                x: [-100, 300]
-                                            }}
-                                            transition={{
-                                                duration: 3,
-                                                repeat: Infinity,
-                                                repeatDelay: 4,
-                                                ease: "easeInOut"
-                                            }}
-                                        />
-                                    )}
-
                                     <motion.div
-                                        animate={!prefersReducedMotion && window.innerWidth > 768 && active ? {
-                                            rotate: [0, 5, -5, 0],
-                                            scale: [1, 1.15, 1]
-                                        } : {}}
-                                        transition={{
-                                            duration: 2,
-                                            repeat: Infinity,
-                                            repeatDelay: 3
-                                        }}
                                         whileHover={{
                                             scale: 1.2,
                                             rotate: 10,
@@ -496,15 +295,9 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                     {active && (
                                         <motion.div
                                             className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"
-                                            animate={!prefersReducedMotion && window.innerWidth > 768 ? {
-                                                scale: [1, 1.3, 1],
-                                                opacity: [1, 0.7, 1]
-                                            } : {}}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                                ease: "easeInOut"
-                                            }}
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ duration: 0.2 }}
                                         />
                                     )}
                                 </Link>
@@ -536,12 +329,8 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                                 {user.email?.charAt(0).toUpperCase() || 'U'}
                                             </AvatarFallback>
                                         </Avatar>
-                                        {/* Online indicator - no animation on mobile */}
-                                        <motion.div
-                                            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 border-2 border-zinc-900 rounded-full"
-                                            animate={!prefersReducedMotion && window.innerWidth > 768 ? { scale: [1, 1.2, 1] } : {}}
-                                            transition={{ duration: 2, repeat: Infinity }}
-                                        />
+                                        {/* Online indicator */}
+                                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 border-2 border-zinc-900 rounded-full" />
                                     </Button>
                                 </motion.div>
                             </DropdownMenuTrigger>

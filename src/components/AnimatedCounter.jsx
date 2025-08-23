@@ -6,7 +6,7 @@ function formatCurrency(n) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
     }).format(Number(n));
 }
 export  const AnimatedCounter = ({ value, prefix = "", suffix = "" }) => {
@@ -20,12 +20,12 @@ export  const AnimatedCounter = ({ value, prefix = "", suffix = "" }) => {
         if (!isNaN(numericValue)) {
             controls.start({
                 opacity: 1,
-                transition: { duration: 0.5 }
+                transition: { duration: 0.1 }
             });
 
             let startValue = displayValue;
             let endValue = numericValue;
-            let duration = 400;
+            let duration = 200;
             let startTime = Date.now();
 
             const animate = () => {

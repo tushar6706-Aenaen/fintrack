@@ -11,7 +11,6 @@ import AuthPage from "./pages/AuthPage"; // New AuthPage
 import SavingsGoals from "./pages/SavingsGoals";
 import Settings from "./pages/Settings";
 import { Toaster } from "./components/ui/toaster";
-import { ToastProvider } from "./components/ui/use-toast";
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -22,19 +21,12 @@ export default function App() {
         let mounted = true;
 
         const handleAuthStateChange = async (event, session) => {
-            console.log("Auth state change event:", event, "Session:", session?.user?.email || "No user");
-            
             if (mounted) {
                 setUser(session?.user || null);
                 setAuthLoading(false);
-                
-                // Handle redirections based on auth state
-                if (event === 'SIGNED_OUT' || !session?.user) {
-                    console.log("User signed out, redirecting to auth page");
-                    navigate("/auth", { replace: true });
-                } else if (session?.user && window.location.pathname === "/auth") {
-                    console.log("User signed in, redirecting to dashboard");
-                    navigate("/", { replace: true });
+                // Redirect authenticated users away from auth page if they land there
+                if (session?.user && window.location.pathname === "/auth") {
+                    navigate("/");
                 }
             }
         };
@@ -63,34 +55,11 @@ export default function App() {
 
     const handleSignOut = async () => {
         try {
-            console.log("Starting sign out process...");
-            
-            // Clear user state immediately to prevent UI flickering
-            setUser(null);
-            
-            // Sign out from Supabase with scope 'global' to clear all sessions
-            const { error } = await supabase.auth.signOut({ scope: 'global' });
-            
-            if (error) {
-                console.error("Supabase sign out error:", error);
-                // Continue with cleanup even if there's an error
-            }
-            
-            // Clear any remaining local storage
-            localStorage.removeItem('supabase.auth.token');
-            
-            console.log("Sign out successful, redirecting to auth page");
-            
-            // Force navigation to auth page with replace to prevent back navigation
-            navigate("/auth", { replace: true });
-            
+            await supabase.auth.signOut();
+            // Supabase's onAuthStateChange will handle setting user to null and redirecting
         } catch (error) {
             console.error("Error signing out:", error);
-            
-            // Even if there's an error, try to clear local state and redirect
-            setUser(null);
-            localStorage.removeItem('supabase.auth.token');
-            navigate("/auth", { replace: true });
+            // Optionally, show a toast or message to the user
         }
     };
 
@@ -106,31 +75,28 @@ export default function App() {
     }
 
     return (
-      <>
-      
-      <ToastProvider>
-        <Routes>
-            {/* Public Auth Route */}
-            <Route path="/auth" element={<AuthPage />} />
+        <>
+            <Routes>
+                {/* Public Auth Route */}
+                <Route path="/auth" element={<AuthPage />} />
 
-            {/* Protected Routes - Render Layout only if user is authenticated */}
-            {user ? (
-              <Route element={<Layout user={user} onSignOut={handleSignOut} />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="expenses" element={<Expenses />} />
-                    <Route path="budgets" element={<Budgets />} />
-                    <Route path="reports" element={<Reports />} />
-                    <Route path="saving-goals" element={<SavingsGoals />} />
-                    <Route path="settings" element={<Settings />} />
-                    {/* Add more protected routes here */}
-                </Route>
-            ) : (
-              // Fallback for any other path if not authenticated, redirects to /auth
-              <Route path="*" element={<AuthPage />} />
-            )}
-        </Routes>
-         <Toaster />
-        </ToastProvider>
-            </>
+                {/* Protected Routes - Render Layout only if user is authenticated */}
+                {user ? (
+                  <Route element={<Layout user={user} onSignOut={handleSignOut} />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="expenses" element={<Expenses />} />
+                        <Route path="budgets" element={<Budgets />} />
+                        <Route path="reports" element={<Reports />} />
+                        <Route path="saving-goals" element={<SavingsGoals />} />
+                        <Route path="settings" element={<Settings />} />
+                        {/* Add more protected routes here */}
+                    </Route>
+                ) : (
+                  // Fallback for any other path if not authenticated, redirects to /auth
+                  <Route path="*" element={<AuthPage />} />
+                )}
+            </Routes>
+            <Toaster />
+        </>
     );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { format, isPast } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
+import { useToast } from "@/hooks/use-toast";
 import {
     Plus,
     Target,
@@ -41,11 +42,11 @@ function formatCurrency(n) {
 
 // Create motion-wrapped components for animation
 const MotionCard = motion(Card);
-const MotionDialogContent = motion(DialogContent);
 
 export default function SavingsGoals() {
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
+    const { toast } = useToast();
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -152,6 +153,11 @@ export default function SavingsGoals() {
 
         if (!userId || !name.trim() || !targetAmount || !currentAmount) {
             setError("Please fill in all required fields.");
+            toast({
+                title: "Validation Error",
+                description: "Please fill in all required fields.",
+                variant: "destructive",
+            });
             setSubmitting(false);
             return;
         }
@@ -161,11 +167,21 @@ export default function SavingsGoals() {
 
         if (isNaN(parsedTarget) || parsedTarget <= 0) {
             setError("Target amount must be a positive number.");
+            toast({
+                title: "Invalid Target Amount",
+                description: "Target amount must be a positive number.",
+                variant: "destructive",
+            });
             setSubmitting(false);
             return;
         }
         if (isNaN(parsedCurrent) || parsedCurrent < 0) {
             setError("Current amount must be a non-negative number.");
+            toast({
+                title: "Invalid Current Amount",
+                description: "Current amount must be a non-negative number.",
+                variant: "destructive",
+            });
             setSubmitting(false);
             return;
         }
@@ -188,11 +204,23 @@ export default function SavingsGoals() {
                     .update(payload)
                     .eq("id", currentGoal.id);
                 if (updateError) throw updateError;
+                
+                toast({
+                    title: "Goal Updated Successfully! ✨",
+                    description: `"${name}" has been updated.`,
+                    variant: "success",
+                });
             } else {
                 const { error: insertError } = await supabase
                     .from("savings_goals")
                     .insert([payload]);
                 if (insertError) throw insertError;
+                
+                toast({
+                    title: "Goal Created Successfully! 🎯",
+                    description: `"${name}" has been added to your savings goals.`,
+                    variant: "success",
+                });
             }
 
             resetForm();
@@ -201,6 +229,11 @@ export default function SavingsGoals() {
         } catch (err) {
             console.error("Error saving goal:", err);
             setError(`Failed to save goal: ${err.message}`);
+            toast({
+                title: "Failed to Save Goal",
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -226,15 +259,27 @@ export default function SavingsGoals() {
         }
         setError("");
         try {
+            const goalToDelete = goals.find(g => g.id === goalId);
             const { error: deleteError } = await supabase
                 .from("savings_goals")
                 .delete()
                 .eq("id", goalId);
             if (deleteError) throw deleteError;
+            
+            toast({
+                title: "Goal Deleted Successfully! 🗑️",
+                description: `"${goalToDelete?.name || 'Goal'}" has been removed from your savings goals.`,
+                variant: "success",
+            });
             // fetchGoals(); // Real-time handles update
         } catch (err) {
             console.error("Error deleting goal:", err);
             setError(`Failed to delete goal: ${err.message}`);
+            toast({
+                title: "Failed to Delete Goal",
+                description: err.message,
+                variant: "destructive",
+            });
         }
     };
 
@@ -279,9 +324,9 @@ export default function SavingsGoals() {
     };
     
     const modalVariants = {
-        hidden: { scale: 0.95, opacity: 0, y: 20 },
-        visible: { scale: 1, opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 25 } },
-        exit: { scale: 0.95, opacity: 0, y: 20, transition: { duration: 0.2 } }
+        hidden: { scale: 0.95, opacity: 0 },
+        visible: { scale: 1, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 25 } },
+        exit: { scale: 0.95, opacity: 0, transition: { duration: 0.2 } }
     };
 
     if (authLoading) {
@@ -459,17 +504,18 @@ export default function SavingsGoals() {
             <AnimatePresence>
                 {openDialog && (
                     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                        <MotionDialogContent
-                            className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-50"
-                            variants={modalVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                        >
+                        <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-50">
                             <DialogHeader>
                                 <DialogTitle className="text-zinc-50">{isEditing ? "Edit Savings Goal" : "Add New Savings Goal"}</DialogTitle>
                             </DialogHeader>
-                            <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                            <motion.form 
+                                onSubmit={handleSubmit} 
+                                className="grid gap-4 py-4"
+                                variants={modalVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                            >
                                 <div className="grid gap-2">
                                     <label htmlFor="name" className="text-sm font-medium text-zinc-300">Name</label>
                                     <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Down Payment for House" required disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
@@ -515,8 +561,8 @@ export default function SavingsGoals() {
                                         </Button>
                                     </div>
                                 </DialogFooter>
-                            </form>
-                        </MotionDialogContent>
+                            </motion.form>
+                        </DialogContent>
                     </Dialog>
                 )}
             </AnimatePresence>

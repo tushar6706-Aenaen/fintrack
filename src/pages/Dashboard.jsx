@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { format, subDays, startOfWeek, endOfWeek, isToday, isThisWeek } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 // Framer Motion imports
 import {
@@ -27,7 +28,6 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     MoreHorizontal,
-    Filter,
     Wallet,
     PieChart, // Added for potential future use in analytics
     BarChart3, // Added for potential future use in overview
@@ -182,31 +182,6 @@ const AnimatedMetricCard = ({ title, value, trend, trendValue, icon: Icon, color
                         <Icon className="h-8 w-8 text-white" />
                     </motion.div>
                 </div>
-
-                {/* Floating particles effect */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    {[...Array(3)].map((_, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute w-1 h-1 bg-white/30 rounded-full"
-                            animate={{
-                                x: [0, 100, 0],
-                                y: [0, -50, 0],
-                                opacity: [0, 1, 0],
-                            }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                delay: i * 1,
-                                ease: "easeInOut"
-                            }}
-                            style={{
-                                left: `${20 + i * 30}%`,
-                                top: `${60 + i * 10}%`,
-                            }}
-                        />
-                    ))}
-                </div>
             </div>
         </motion.div>
     );
@@ -220,6 +195,7 @@ export default function Dashboard() {
     // Supabase auth state
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(true); // New state for initial auth loading
+    const { toast } = useToast();
 
     const [expenses, setExpenses] = useState([]);
     const [trendData, setTrendData] = useState([]);
@@ -492,12 +468,22 @@ export default function Dashboard() {
         e.preventDefault();
         if (!userId || !title.trim() || !amount || !categoryId) {
             setError("Please fill all required fields.");
+            toast({
+                title: "Validation Error",
+                description: "Please fill all required fields.",
+                variant: "destructive",
+            });
             return;
         }
 
         const parsed = parseFloat(amount);
         if (Number.isNaN(parsed) || parsed <= 0) {
             setError("Amount must be a positive number.");
+            toast({
+                title: "Invalid Amount",
+                description: "Amount must be a positive number.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -524,9 +510,20 @@ export default function Dashboard() {
                 console.error("Insert error:", error);
 
                 if (error.message.includes("invalid input syntax for type uuid")) {
-                    setError(`Database schema issue: user_id column expects UUID format but got "${userId}". Please update your database schema to use TEXT instead of UUID for user_id columns.`);
+                    const errorMsg = `Database schema issue: user_id column expects UUID format but got "${userId}". Please update your database schema to use TEXT instead of UUID for user_id columns.`;
+                    setError(errorMsg);
+                    toast({
+                        title: "Database Configuration Error",
+                        description: "Database schema issue detected. Please check the console for details.",
+                        variant: "destructive",
+                    });
                 } else {
                     setError(`Failed to add expense: ${error.message}`);
+                    toast({
+                        title: "Failed to Add Expense",
+                        description: error.message,
+                        variant: "destructive",
+                    });
                 }
             } else {
                 console.log("Expense added successfully:", data);
@@ -537,10 +534,21 @@ export default function Dashboard() {
                 setOpen(false);
                 setError("");
                 await loadExpenses(); // Reload to show new expense
+                
+                toast({
+                    title: "Expense Added Successfully",
+                    description: `Added ${title} for ₹${parsed.toLocaleString()} to your expenses.`,
+                    variant: "success",
+                });
             }
         } catch (err) {
             console.error("Unexpected error:", err);
             setError(`Unexpected error: ${err.message}`);
+            toast({
+                title: "Unexpected Error",
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -669,16 +677,10 @@ export default function Dashboard() {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">
-                            <Filter className="w-4 h-4 mr-2" />
-                            Filter
-                        </Button>
-                        <Button onClick={() => setOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Expense
-                        </Button>
-                    </div>
+                    <Button onClick={() => setOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Expense
+                    </Button>
                 </div>
 
                 {/* Stats Grid */}

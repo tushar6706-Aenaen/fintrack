@@ -2,22 +2,13 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import FloatingParticles from "@/components/FloatingParticles" // Import the new component
 
 const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("rounded-lg border bg-card text-card-foreground shadow-sm relative overflow-hidden", className)} // Added "relative" and "overflow-hidden"
+    className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
     {...props}
-  >
-    {/* Render the floating particles effect as a background */}
-    <FloatingParticles />
-
-    {/* Render the actual card content over the particles */}
-    <div className="relative z-10">
-      {props.children}
-    </div>
-  </div>
+  />
 ))
 Card.displayName = "Card"
 

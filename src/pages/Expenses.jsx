@@ -20,7 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -343,6 +343,7 @@ export default function Expenses() {
         toast({
           title: "Expense Added! 🎉",
           description: `"${payload.title}" for ${formatCurrency(payload.amount)} was successfully added.`,
+          variant: "success",
         });
         await loadExpenses();
       }
@@ -407,6 +408,7 @@ export default function Expenses() {
         toast({
           title: "Expense Updated! ✨",
           description: `"${payload.title}" was successfully updated.`,
+          variant: "success",
         });
         await loadExpenses();
       }
@@ -449,6 +451,7 @@ export default function Expenses() {
                 toast({
                   title: "Expense Deleted!",
                   description: `"${selectedExpense.title}" was successfully removed.`,
+                  variant: "success",
                 });
                 await loadExpenses();
               }
