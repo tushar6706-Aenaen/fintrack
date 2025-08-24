@@ -36,7 +36,7 @@ const links = [
     { name: "Expenses", path: "/expenses", icon: Receipt, color: "from-red-500 to-rose-500" },
     { name: "Budgets", path: "/budgets", icon: PiggyBank, color: "from-emerald-500 to-green-500" },
     { name: "Reports", path: "/reports", icon: BarChart3, color: "from-violet-500 to-purple-500" },
-    { name: "Goals", path: "/saving-goals", icon: TrendingUp, color: "from-amber-500 to-orange-500" },
+    { name: "Goals", path: "/savings-goals", icon: TrendingUp, color: "from-amber-500 to-orange-500" },
 ];
 
 // Enhanced animation variants
@@ -200,7 +200,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                 variants={headerVariants}
                 initial="initial"
                 animate="animate"
-                className={`sticky top-6 z-50 w-[370px] mx-auto lg:w-full rounded-full transition-all duration-300 ${isScrolled
+                className={`sticky top-6 z-10 w-[370px] mx-auto lg:w-full rounded-full transition-all duration-300 ${isScrolled
                         ? 'bg-zinc-900/95 backdrop-blur-xl border-b border-zinc-700/50 shadow-2xl shadow-black/40'
                         : 'bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-700/30 shadow-xl shadow-black/20'
                     } lg:top-4 lg:mx-auto lg:max-w-5xl lg:border lg:rounded-2xl lg:border-zinc-700/30 relative overflow-hidden`}

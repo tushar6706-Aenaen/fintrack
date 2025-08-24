@@ -82,15 +82,18 @@ export default function App() {
 
                 {/* Protected Routes - Render Layout only if user is authenticated */}
                 {user ? (
-                  <Route element={<Layout user={user} onSignOut={handleSignOut} />}>
+                  <>
+                    <Route element={<Layout user={user} onSignOut={handleSignOut} />}>
                         <Route index element={<Dashboard />} />
                         <Route path="expenses" element={<Expenses />} />
                         <Route path="budgets" element={<Budgets />} />
                         <Route path="reports" element={<Reports />} />
-                        <Route path="saving-goals" element={<SavingsGoals />} />
+                        <Route path="savings-goals" element={<SavingsGoals />} />
                         <Route path="settings" element={<Settings />} />
-                        {/* Add more protected routes here */}
                     </Route>
+                    {/* Catch all other routes and redirect to dashboard when authenticated */}
+                    <Route path="*" element={<Dashboard />} />
+                  </>
                 ) : (
                   // Fallback for any other path if not authenticated, redirects to /auth
                   <Route path="*" element={<AuthPage />} />

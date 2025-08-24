@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { format, isPast } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion"; // Import framer-motion
-import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Plus,
     Target,
@@ -15,20 +14,166 @@ import {
     BadgeCheck,
     Coins,
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+
+// Mock toast hook - replace with your actual implementation
+const useToast = () => ({
+    toast: ({ title, description, variant }) => {
+        console.log(`Toast [${variant}]: ${title} - ${description}`);
+        // Replace with actual toast implementation
+    }
+});
+
+// Enhanced UI components with beautiful styling
+const Card = ({ children, className = "", ...props }) => (
+    <div className={`relative group rounded-xl border border-zinc-800/60 bg-gradient-to-br from-zinc-900/90 via-zinc-900/95 to-zinc-950/90 backdrop-blur-sm p-6 shadow-2xl hover:shadow-zinc-900/20 transition-all duration-300 hover:border-zinc-700/60 ${className}`} {...props}>{children}</div>
+);
+const CardHeader = ({ children, className = "", ...props }) => (
+    <div className={`flex flex-col space-y-1.5 p-6 ${className}`} {...props}>{children}</div>
+);
+const CardTitle = ({ children, className = "", ...props }) => (
+    <h3 className={`text-2xl font-bold leading-none tracking-tight bg-gradient-to-r from-zinc-50 to-zinc-300 bg-clip-text text-transparent ${className}`} {...props}>{children}</h3>
+);
+const CardContent = ({ children, className = "", ...props }) => (
+    <div className={`p-6 pt-0 ${className}`} {...props}>{children}</div>
+);
+const CardFooter = ({ children, className = "", ...props }) => (
+    <div className={`flex items-center p-6 pt-0 ${className}`} {...props}>{children}</div>
+);
+
+const Button = ({ children, variant = "default", size = "default", className = "", disabled = false, onClick, type = "button", ...props }) => {
+    const baseClass = "inline-flex items-center justify-center rounded-xl text-sm font-semibold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl";
+    const variants = {
+        default: "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 shadow-blue-600/25 hover:shadow-blue-500/40",
+        destructive: "bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 shadow-red-600/25 hover:shadow-red-500/40",
+        outline: "border-2 border-zinc-700 bg-zinc-900/50 backdrop-blur-sm text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-100 hover:border-zinc-600 shadow-zinc-900/50",
+        ghost: "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 shadow-none"
+    };
+    const sizes = {
+        default: "h-11 px-6 py-2",
+        sm: "h-9 rounded-lg px-4 text-xs",
+        lg: "h-12 rounded-xl px-8 text-base"
+    };
+    
+    return (
+        <button 
+            type={type}
+            className={`${baseClass} ${variants[variant]} ${sizes[size]} ${className}`} 
+            disabled={disabled}
+            onClick={onClick}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+};
+
+const Input = ({ className = "", type = "text", ...props }) => (
+    <input 
+        type={type}
+        className={`flex h-11 w-full rounded-xl border-2 border-zinc-700 bg-zinc-900/80 backdrop-blur-sm px-4 py-3 text-sm text-zinc-100 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 hover:border-zinc-600 ${className}`}
+        {...props}
+    />
+);
+
+const Textarea = ({ className = "", ...props }) => (
+    <textarea 
+        className={`flex min-h-[100px] w-full rounded-xl border-2 border-zinc-700 bg-zinc-900/80 backdrop-blur-sm px-4 py-3 text-sm text-zinc-100 ring-offset-background placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 hover:border-zinc-600 resize-none ${className}`}
+        {...props}
+    />
+);
+
+const Progress = ({ value = 0, className = "", indicatorClassName = "" }) => (
+    <div className={`relative h-3 w-full overflow-hidden rounded-full bg-zinc-800/60 backdrop-blur-sm border border-zinc-700/50 ${className}`}>
+        <div 
+            className={`h-full w-full flex-1 rounded-full transition-all duration-700 ease-out shadow-lg ${indicatorClassName}`}
+            style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+        />
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-30" />
+    </div>
+);
+
+const Dialog = ({ children, open, onOpenChange }) => {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+            <div className="relative z-[10000]">{children}</div>
+        </div>
+    );
+};
+
+const DialogContent = ({ children, className = "" }) => (
+    <div className={`fixed left-[50%] top-[50%] z-[10001] grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border-2 border-zinc-700/50 bg-gradient-to-br from-zinc-900/95 to-zinc-950/95 backdrop-blur-xl p-6 shadow-2xl duration-200 sm:rounded-2xl ${className}`}>
+        {children}
+    </div>
+);
+
+const DialogHeader = ({ children, className = "" }) => (
+    <div className={`flex flex-col space-y-2 text-center sm:text-left ${className}`}>{children}</div>
+);
+
+const DialogTitle = ({ children, className = "" }) => (
+    <h2 className={`text-xl font-bold leading-none tracking-tight bg-gradient-to-r from-zinc-50 to-zinc-300 bg-clip-text text-transparent ${className}`}>{children}</h2>
+);
+
+const DialogFooter = ({ children, className = "" }) => (
+    <div className={`flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 ${className}`}>{children}</div>
+);
+
+const Select = ({ children, value, onValueChange, disabled }) => {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="relative">
+            <button 
+                type="button"
+                className="flex h-11 w-full items-center justify-between rounded-xl border-2 border-zinc-700 bg-zinc-900/80 backdrop-blur-sm px-4 py-3 text-sm text-zinc-100 ring-offset-background placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300 hover:border-zinc-600"
+                onClick={() => !disabled && setOpen(!open)}
+                disabled={disabled}
+            >
+                <span className={value ? "text-zinc-100" : "text-zinc-500"}>{value || "Select..."}</span>
+                <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {open && (
+                <div className="absolute z-50 mt-2 min-w-full overflow-hidden rounded-xl border-2 border-zinc-700/50 bg-zinc-900/95 backdrop-blur-xl p-2 text-zinc-100 shadow-2xl animate-in fade-in-0 zoom-in-95">
+                    {React.Children.map(children, child => 
+                        React.cloneElement(child, { 
+                            onClick: () => { onValueChange(child.props.value); setOpen(false); }
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const SelectTrigger = ({ children, className = "" }) => children;
+const SelectValue = ({ placeholder }) => placeholder;
+const SelectContent = ({ children, className = "" }) => (
+    <div className={className}>{children}</div>
+);
+const SelectItem = ({ children, value, onClick }) => (
+    <div 
+        className="relative flex w-full cursor-pointer select-none items-center rounded-lg py-2.5 px-4 text-sm outline-none hover:bg-zinc-800/80 hover:text-zinc-100 transition-all duration-200 border border-transparent hover:border-zinc-700/50"
+        onClick={onClick}
+    >
+        {children}
+    </div>
+);
+
+const Badge = ({ children, variant = "default", className = "" }) => {
+    const variants = {
+        default: "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-blue-600/25",
+        destructive: "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-red-600/25",
+        secondary: "bg-gradient-to-r from-zinc-700 to-zinc-800 text-zinc-100 shadow-zinc-700/25"
+    };
+    return (
+        <div className={`inline-flex items-center rounded-full border-0 px-3 py-1.5 text-xs font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 shadow-lg hover:scale-105 ${variants[variant]} ${className}`}>
+            {children}
+        </div>
+    );
+};
 
 // Helper function for currency formatting
 function formatCurrency(n) {
@@ -67,13 +212,17 @@ export default function SavingsGoals() {
 
     const userId = user?.id;
 
-    // Fetch savings goals
+    // Optimized fetch goals with better error handling
     const fetchGoals = useCallback(async () => {
         if (!userId) {
+            console.log("No userId available for fetching goals");
             setGoals([]);
+            setLoading(false);
             return;
         }
-        setLoading(true);
+
+        console.log("Fetching savings goals for user:", userId);
+        
         try {
             const { data, error } = await supabase
                 .from("savings_goals")
@@ -81,69 +230,172 @@ export default function SavingsGoals() {
                 .eq("user_id", userId)
                 .order("target_date", { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase query error:", error);
+                throw new Error(`Database error: ${error.message}`);
+            }
+
+            console.log("Successfully fetched goals:", data?.length || 0, "goals");
             setGoals(data || []);
+            setError(""); // Clear any previous errors
         } catch (err) {
             console.error("Error fetching savings goals:", err);
-            setError(`Failed to load savings goals: ${err.message}`);
+            const errorMessage = err.message || "Failed to load savings goals";
+            setError(errorMessage);
+            toast({
+                title: "Error Loading Goals",
+                description: errorMessage,
+                variant: "destructive",
+            });
+            // Don't clear goals on error, keep showing cached data
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, [userId, toast]);
 
-    // Handle initial auth state and real-time subscriptions
+    // Handle auth state changes
     useEffect(() => {
         let mounted = true;
+        let authSubscription = null;
 
-        const handleAuthStateChange = async (event, session) => {
-            if (mounted) {
-                setUser(session?.user || null);
-                setAuthLoading(false);
+        const initializeAuth = async () => {
+            try {
+                // Get initial session
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (mounted) {
+                    setUser(session?.user || null);
+                    setAuthLoading(false);
+                }
+
+                // Set up auth state change listener
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                    console.log("Auth state changed:", event, session?.user?.id);
+                    if (mounted) {
+                        setUser(session?.user || null);
+                        setAuthLoading(false);
+                        
+                        // Clear goals when user logs out
+                        if (event === 'SIGNED_OUT') {
+                            setGoals([]);
+                        }
+                    }
+                });
+                
+                authSubscription = subscription;
+            } catch (error) {
+                console.error("Auth initialization error:", error);
+                if (mounted) {
+                    setAuthLoading(false);
+                    setError(`Authentication error: ${error.message}`);
+                }
             }
         };
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (mounted) {
-                setUser(session?.user || null);
-                setAuthLoading(false);
-            }
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+        initializeAuth();
 
         return () => {
             mounted = false;
-            subscription?.unsubscribe();
+            authSubscription?.unsubscribe();
         };
     }, []);
 
-    // Load goals when user or auth state changes
+    // Handle real-time subscriptions and data fetching
     useEffect(() => {
-        if (authLoading) return;
-        if (user) {
-            fetchGoals();
+        if (authLoading) {
+            console.log("Auth still loading, waiting...");
+            return;
+        }
 
-            const channel = supabase
-                .channel('savings-goals-changes')
+        if (!user) {
+            console.log("No user authenticated, clearing goals");
+            setGoals([]);
+            setLoading(false);
+            return;
+        }
+
+        console.log("User authenticated, setting up real-time subscription for user:", userId);
+        
+        let realtimeChannel = null;
+
+        const setupRealtimeSubscription = async () => {
+            // Initial data fetch
+            await fetchGoals();
+
+            // Set up real-time subscription for this user's goals
+            realtimeChannel = supabase
+                .channel(`savings_goals_${userId}`)
                 .on("postgres_changes", {
-                    event: "*",
+                    event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
                     schema: "public",
                     table: "savings_goals",
                     filter: `user_id=eq.${userId}`
-                }, () => {
-                    console.log("Real-time update received for savings goals");
-                    fetchGoals();
+                }, (payload) => {
+                    console.log("Real-time update received:", payload);
+                    
+                    const { eventType, new: newRecord, old: oldRecord } = payload;
+                    
+                    setGoals(currentGoals => {
+                        switch (eventType) {
+                            case 'INSERT':
+                                // Add new goal if not already present
+                                if (!currentGoals.find(g => g.id === newRecord.id)) {
+                                    console.log("Adding new goal:", newRecord.name);
+                                    return [...currentGoals, newRecord].sort((a, b) => 
+                                        new Date(a.target_date || '9999-12-31') - new Date(b.target_date || '9999-12-31')
+                                    );
+                                }
+                                return currentGoals;
+                                
+                            case 'UPDATE':
+                                // Update existing goal
+                                console.log("Updating goal:", newRecord.name);
+                                return currentGoals.map(goal => 
+                                    goal.id === newRecord.id ? newRecord : goal
+                                ).sort((a, b) => 
+                                    new Date(a.target_date || '9999-12-31') - new Date(b.target_date || '9999-12-31')
+                                );
+                                
+                            case 'DELETE':
+                                // Remove deleted goal
+                                console.log("Removing goal:", oldRecord.id);
+                                return currentGoals.filter(goal => goal.id !== oldRecord.id);
+                                
+                            default:
+                                console.log("Unknown event type:", eventType);
+                                return currentGoals;
+                        }
+                    });
                 })
-                .subscribe();
+                .subscribe((status, err) => {
+                    console.log("Real-time subscription status:", status, err);
+                    
+                    if (status === 'SUBSCRIBED') {
+                        console.log("✅ Real-time subscription active for savings goals");
+                    } else if (status === 'CHANNEL_ERROR' || err) {
+                        console.error("❌ Real-time subscription error:", err);
+                        toast({
+                            title: "Real-time Connection Issue",
+                            description: "Real-time updates may not work properly. Data will still sync on refresh.",
+                            variant: "destructive",
+                        });
+                    } else if (status === 'CLOSED') {
+                        console.log("Real-time subscription closed");
+                    }
+                });
+        };
 
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        } else {
-            setGoals([]);
-            setLoading(false);
-        }
-    }, [user, authLoading, userId, fetchGoals]);
+        setupRealtimeSubscription();
+
+        // Cleanup function
+        return () => {
+            console.log("Cleaning up savings goals subscription");
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+        };
+    }, [user, authLoading, userId, fetchGoals, toast]);
 
     // Handle form submission (Add/Edit)
     const handleSubmit = async (e) => {
@@ -151,11 +403,13 @@ export default function SavingsGoals() {
         setSubmitting(true);
         setError("");
 
-        if (!userId || !name.trim() || !targetAmount || !currentAmount) {
-            setError("Please fill in all required fields.");
+        // Validation
+        if (!userId || !name.trim() || !targetAmount || currentAmount === "") {
+            const errorMsg = "Please fill in all required fields.";
+            setError(errorMsg);
             toast({
                 title: "Validation Error",
-                description: "Please fill in all required fields.",
+                description: errorMsg,
                 variant: "destructive",
             });
             setSubmitting(false);
@@ -166,20 +420,23 @@ export default function SavingsGoals() {
         const parsedCurrent = parseFloat(currentAmount);
 
         if (isNaN(parsedTarget) || parsedTarget <= 0) {
-            setError("Target amount must be a positive number.");
+            const errorMsg = "Target amount must be a positive number.";
+            setError(errorMsg);
             toast({
                 title: "Invalid Target Amount",
-                description: "Target amount must be a positive number.",
+                description: errorMsg,
                 variant: "destructive",
             });
             setSubmitting(false);
             return;
         }
+        
         if (isNaN(parsedCurrent) || parsedCurrent < 0) {
-            setError("Current amount must be a non-negative number.");
+            const errorMsg = "Current amount must be a non-negative number.";
+            setError(errorMsg);
             toast({
                 title: "Invalid Current Amount",
-                description: "Current amount must be a non-negative number.",
+                description: errorMsg,
                 variant: "destructive",
             });
             setSubmitting(false);
@@ -190,48 +447,55 @@ export default function SavingsGoals() {
             const payload = {
                 user_id: userId,
                 name: name.trim(),
-                description: description || null,
+                description: description.trim() || null,
                 target_amount: parsedTarget,
                 current_amount: parsedCurrent,
                 target_date: targetDate || null,
                 priority: priority,
                 is_achieved: parsedCurrent >= parsedTarget,
+                updated_at: new Date().toISOString(),
             };
 
             if (isEditing && currentGoal) {
                 const { error: updateError } = await supabase
                     .from("savings_goals")
                     .update(payload)
-                    .eq("id", currentGoal.id);
+                    .eq("id", currentGoal.id)
+                    .eq("user_id", userId); // Additional security check
+                    
                 if (updateError) throw updateError;
                 
                 toast({
                     title: "Goal Updated Successfully! ✨",
                     description: `"${name}" has been updated.`,
-                    variant: "success",
+                    variant: "default",
                 });
             } else {
+                payload.created_at = new Date().toISOString();
+                
                 const { error: insertError } = await supabase
                     .from("savings_goals")
                     .insert([payload]);
+                    
                 if (insertError) throw insertError;
                 
                 toast({
                     title: "Goal Created Successfully! 🎯",
                     description: `"${name}" has been added to your savings goals.`,
-                    variant: "success",
+                    variant: "default",
                 });
             }
 
             resetForm();
             setOpenDialog(false);
-            // fetchGoals(); // No need to call, real-time subscription will handle it
+            // Real-time subscription will handle the UI update
         } catch (err) {
             console.error("Error saving goal:", err);
-            setError(`Failed to save goal: ${err.message}`);
+            const errorMsg = `Failed to save goal: ${err.message}`;
+            setError(errorMsg);
             toast({
                 title: "Failed to Save Goal",
-                description: err.message,
+                description: errorMsg,
                 variant: "destructive",
             });
         } finally {
@@ -244,8 +508,8 @@ export default function SavingsGoals() {
         setCurrentGoal(goal);
         setName(goal.name);
         setDescription(goal.description || "");
-        setTargetAmount(goal.target_amount);
-        setCurrentAmount(goal.current_amount);
+        setTargetAmount(goal.target_amount.toString());
+        setCurrentAmount(goal.current_amount.toString());
         setTargetDate(goal.target_date || "");
         setPriority(goal.priority || "medium");
         setIsEditing(true);
@@ -254,30 +518,37 @@ export default function SavingsGoals() {
 
     // Delete a goal
     const handleDeleteGoal = async (goalId) => {
-        if (!window.confirm("Are you sure you want to delete this savings goal?")) {
+        const goalToDelete = goals.find(g => g.id === goalId);
+        if (!goalToDelete) return;
+
+        if (!window.confirm(`Are you sure you want to delete "${goalToDelete.name}"?`)) {
             return;
         }
+
         setError("");
+        
         try {
-            const goalToDelete = goals.find(g => g.id === goalId);
             const { error: deleteError } = await supabase
                 .from("savings_goals")
                 .delete()
-                .eq("id", goalId);
+                .eq("id", goalId)
+                .eq("user_id", userId); // Additional security check
+                
             if (deleteError) throw deleteError;
             
             toast({
                 title: "Goal Deleted Successfully! 🗑️",
-                description: `"${goalToDelete?.name || 'Goal'}" has been removed from your savings goals.`,
-                variant: "success",
+                description: `"${goalToDelete.name}" has been removed from your savings goals.`,
+                variant: "default",
             });
-            // fetchGoals(); // Real-time handles update
+            // Real-time subscription will handle the UI update
         } catch (err) {
             console.error("Error deleting goal:", err);
-            setError(`Failed to delete goal: ${err.message}`);
+            const errorMsg = `Failed to delete goal: ${err.message}`;
+            setError(errorMsg);
             toast({
                 title: "Failed to Delete Goal",
-                description: err.message,
+                description: errorMsg,
                 variant: "destructive",
             });
         }
@@ -296,12 +567,30 @@ export default function SavingsGoals() {
         setError("");
     };
 
-    // Priority badge styles
+    // Enhanced priority badge styles
     const getPriorityBadge = (prio) => {
         switch (prio) {
-            case "high": return <Badge variant="destructive" className="bg-red-600 hover:bg-red-600 text-white">High</Badge>;
-            case "medium": return <Badge variant="secondary" className="bg-orange-500 hover:bg-orange-500 text-white">Medium</Badge>;
-            case "low": return <Badge variant="secondary" className="bg-blue-500 hover:bg-blue-500 text-white">Low</Badge>;
+            case "high": 
+                return (
+                    <Badge variant="destructive" className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/25 animate-pulse">
+                        <div className="w-1.5 h-1.5 bg-red-200 rounded-full mr-1.5"></div>
+                        High Priority
+                    </Badge>
+                );
+            case "medium": 
+                return (
+                    <Badge variant="secondary" className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-500/25">
+                        <div className="w-1.5 h-1.5 bg-amber-200 rounded-full mr-1.5"></div>
+                        Medium
+                    </Badge>
+                );
+            case "low": 
+                return (
+                    <Badge variant="secondary" className="bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-500/25">
+                        <div className="w-1.5 h-1.5 bg-emerald-200 rounded-full mr-1.5"></div>
+                        Low Priority
+                    </Badge>
+                );
             default: return null;
         }
     };
@@ -331,10 +620,14 @@ export default function SavingsGoals() {
 
     if (authLoading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-zinc-950">
+            <div className="flex items-center justify-center h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-50 mx-auto mb-4"></div>
-                    <div className="text-zinc-400">Loading your space...</div>
+                    <div className="relative">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-zinc-800 border-t-blue-500 mx-auto mb-6 shadow-2xl"></div>
+                        <div className="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-blue-400 animate-ping mx-auto opacity-20"></div>
+                    </div>
+                    <div className="text-zinc-300 font-medium text-lg mb-2">Loading your financial space</div>
+                    <div className="text-zinc-500 text-sm">Please wait while we prepare your dashboard...</div>
                 </div>
             </div>
         );
@@ -342,13 +635,25 @@ export default function SavingsGoals() {
 
     if (!user) {
         return (
-            <motion.div className="flex items-center justify-center h-screen bg-zinc-950" variants={pageVariants} initial="initial" animate="animate">
-                <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-zinc-50">Authentication Required</CardTitle>
+            <motion.div 
+                className="flex items-center justify-center h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950" 
+                variants={pageVariants} 
+                initial="initial" 
+                animate="animate"
+            >
+                <Card className="w-full max-w-md shadow-2xl border-zinc-700/50">
+                    <CardHeader className="text-center pb-4">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/25">
+                            <Target className="w-8 h-8 text-white" />
+                        </div>
+                        <CardTitle className="text-zinc-50 text-2xl">Authentication Required</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-center text-zinc-400">Please sign in to view your savings goals.</p>
+                    <CardContent className="text-center">
+                        <p className="text-zinc-400 mb-6 leading-relaxed">Please sign in to access your savings goals and start tracking your financial journey.</p>
+                        <div className="flex items-center justify-center space-x-2 text-zinc-500 text-sm">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span>Secure Authentication</span>
+                        </div>
                     </CardContent>
                 </Card>
             </motion.div>
@@ -357,13 +662,16 @@ export default function SavingsGoals() {
 
     return (
         <motion.div
-            className="min-h-screen bg-zinc-950"
+            className="min-h-screen  bg-zinc-950  relative overflow-hidden"
             variants={pageVariants}
             initial="initial"
             animate="animate"
             exit="exit"
         >
-            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+           
+           
+            
+            <div className="relative z-10 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
                 {/* Error Banner */}
                 <AnimatePresence>
                     {error && (
@@ -371,51 +679,122 @@ export default function SavingsGoals() {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
-                            className="mb-6 p-4 bg-red-950/20 border border-red-800 rounded-lg flex items-start gap-3"
+                            className="mb-6 p-4 bg-gradient-to-r from-red-950/30 to-red-900/20 backdrop-blur-sm border border-red-800/50 rounded-xl flex items-start gap-3 shadow-xl"
                         >
-                            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 text-red-300 text-sm">{error}</div>
-                            <Button variant="ghost" size="sm" onClick={() => setError("")} className="text-red-500 hover:text-red-600 p-1">×</Button>
+                            <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 text-red-300 text-sm font-medium">{error}</div>
+                            <Button variant="ghost" size="sm" onClick={() => setError("")} className="text-red-400 hover:text-red-300 p-1 h-auto">×</Button>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Header */}
+                {/* Enhanced Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12"
                 >
-                    <div className="mb-4 sm:mb-0">
-                        <h1 className="text-3xl font-bold text-zinc-50">Savings Goals</h1>
-                        <p className="text-zinc-400 mt-1">Plan and track your financial aspirations</p>
+                    <div className="mb-6 sm:mb-0">
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/25">
+                                <Target className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-4xl font-bold bg-gradient-to-r from-zinc-50 via-zinc-100 to-zinc-300 bg-clip-text text-transparent">
+                                    Savings Goals
+                                </h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    <p className="text-zinc-400 text-sm">Real-time tracking • Plan your financial future</p>
+                                </div>
+                            </div>
+                        </div>
+                        {goals.length > 0 && (
+                            <div className="flex items-center gap-6 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                    <span className="text-zinc-400">{goals.length} Goals</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span className="text-zinc-400">{goals.filter(g => g.is_achieved).length} Completed</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <Button onClick={() => { setOpenDialog(true); resetForm(); }} className="bg-zinc-50 hover:bg-zinc-200 text-zinc-900">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add New Goal
-                    </Button>
+                    <div className="flex items-center gap-4">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {
+                                console.log("Manual refresh triggered");
+                                setLoading(true);
+                                fetchGoals();
+                            }}
+                            disabled={loading}
+                            className="border-zinc-700/60 text-zinc-300 hover:bg-zinc-800/60 backdrop-blur-sm"
+                        >
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                            {loading ? "Refreshing..." : "Refresh"}
+                        </Button>
+                        <Button 
+                            onClick={() => { setOpenDialog(true); resetForm(); }} 
+                            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add New Goal
+                        </Button>
+                    </div>
                 </motion.div>
 
-                {/* Loading State for Goals */}
+                {/* Enhanced Loading State for Goals */}
                 {loading ? (
-                     <div className="flex items-center justify-center h-64">
-                         <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+                     <div className="flex items-center justify-center h-96">
+                         <div className="text-center">
+                             <div className="relative mb-8">
+                                 <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
+                                 <div className="absolute inset-0 h-12 w-12 border-4 border-transparent border-t-blue-400 rounded-full animate-ping mx-auto opacity-20"></div>
+                             </div>
+                             <h3 className="text-xl font-semibold text-zinc-200 mb-2">Loading your savings goals</h3>
+                             <p className="text-zinc-500">Fetching your financial dreams...</p>
+                         </div>
                      </div>
                 ) : goals.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-12"
+                        className="text-center py-20"
                     >
-                        <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Target className="h-6 w-6 text-zinc-400" />
+                        <div className="relative mb-8">
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-blue-700/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-blue-500/20">
+                                <Target className="h-12 w-12 text-blue-400" />
+                            </div>
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                                <span className="text-xs">💡</span>
+                            </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-zinc-50 mb-2">No savings goals set yet!</h3>
-                        <p className="text-zinc-400 mb-4">Start planning your future by adding your first financial goal.</p>
-                        <Button onClick={() => { setOpenDialog(true); resetForm(); }} className="bg-zinc-50 text-zinc-900">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add First Goal
-                        </Button>
+                        <h3 className="text-2xl font-bold text-zinc-50 mb-3">Ready to set your first savings goal?</h3>
+                        <p className="text-zinc-400 mb-8 max-w-md mx-auto leading-relaxed">
+                            Start your financial journey by creating meaningful savings goals. Track progress in real-time and achieve your dreams faster.
+                        </p>
+                        <div className="space-y-4">
+                            <Button 
+                                onClick={() => { setOpenDialog(true); resetForm(); }} 
+                                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 text-lg px-8 py-3"
+                            >
+                                <Plus className="w-5 h-5 mr-2" />
+                                Create Your First Goal
+                            </Button>
+                            <div className="flex items-center justify-center gap-4 text-sm text-zinc-500">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                    <span>Real-time tracking</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                    <span>Progress visualization</span>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
                 ) : (
                     <motion.div
@@ -432,65 +811,119 @@ export default function SavingsGoals() {
                             return (
                                 <MotionCard
                                     key={goal.id}
-                                    className="bg-gradient-to-br from-zinc-950 to-zinc-900 border-zinc-800 flex flex-col justify-between"
+                                    className={`group relative overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-2xl ${
+                                        isAchieved 
+                                            ? 'border-green-500/50 bg-gradient-to-br from-green-950/30 to-zinc-950/90' 
+                                            : isOverdue 
+                                                ? 'border-red-500/50 bg-gradient-to-br from-red-950/30 to-zinc-950/90'
+                                                : 'border-zinc-700/50 bg-gradient-to-br from-zinc-900/90 to-zinc-950/90'
+                                    }`}
                                     variants={cardItemVariants}
-                                    whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
+                                    whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.3 } }}
                                     whileTap={{ scale: 0.98 }}
-                                    layout // Animate layout changes, e.g., on delete
+                                    layout
+                                    layoutId={goal.id}
                                 >
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <CardTitle className="text-xl font-bold text-zinc-50 flex items-center gap-2">
-                                                <Coins className="w-6 h-6 text-yellow-400" />
-                                                {goal.name}
-                                            </CardTitle>
+                                    {/* Achievement Glow Effect */}
+                                    {isAchieved && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-transparent to-green-500/10 pointer-events-none" />
+                                    )}
+                                    
+                                    <CardHeader className="relative">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1">
+                                                <CardTitle className="text-xl font-bold flex items-center gap-3 mb-2">
+                                                    <div className="relative">
+                                                        <Coins className={`w-7 h-7 ${isAchieved ? 'text-green-400' : 'text-yellow-400'} transition-colors duration-300`} />
+                                                        {isAchieved && (
+                                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                                        )}
+                                                    </div>
+                                                    <span className="bg-gradient-to-r from-zinc-50 to-zinc-300 bg-clip-text text-transparent group-hover:from-white group-hover:to-zinc-200 transition-all duration-300">
+                                                        {goal.name}
+                                                    </span>
+                                                </CardTitle>
+                                            </div>
                                             {getPriorityBadge(goal.priority)}
                                         </div>
                                         {goal.description && (
-                                            <p className="text-sm text-zinc-400 mt-1 line-clamp-2">{goal.description}</p>
+                                            <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2 group-hover:text-zinc-300 transition-colors duration-300">
+                                                {goal.description}
+                                            </p>
                                         )}
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div>
-                                            <div className="flex justify-between text-sm text-zinc-300 mb-1">
-                                                <span>Current: {formatCurrency(goal.current_amount)}</span>
-                                                <span>Target: {formatCurrency(goal.target_amount)}</span>
+                                    <CardContent className="space-y-5">
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-sm font-medium">
+                                                <span className="text-zinc-300">Current: <span className="text-zinc-100">{formatCurrency(goal.current_amount)}</span></span>
+                                                <span className="text-zinc-300">Target: <span className="text-zinc-100">{formatCurrency(goal.target_amount)}</span></span>
                                             </div>
-                                            <Progress value={progress} className="h-2 bg-zinc-700"
-                                                indicatorClassName={isAchieved ? "bg-green-500" : isOverdue ? "bg-red-500" : "bg-blue-500"} />
-                                            <div className="text-right text-xs text-zinc-400 mt-1">{Math.round(progress)}% Complete</div>
+                                            <div className="relative">
+                                                <Progress 
+                                                    value={progress} 
+                                                    className="h-3 bg-zinc-800/60 backdrop-blur-sm border border-zinc-700/50"
+                                                    indicatorClassName={
+                                                        isAchieved 
+                                                            ? "bg-gradient-to-r from-green-400 to-green-500 shadow-green-500/50" 
+                                                            : isOverdue 
+                                                                ? "bg-gradient-to-r from-red-400 to-red-500 shadow-red-500/50" 
+                                                                : "bg-gradient-to-r from-blue-400 to-blue-600 shadow-blue-500/50"
+                                                    } 
+                                                />
+                                                <div className="flex justify-between items-center mt-2">
+                                                    <div className={`text-xs font-semibold ${
+                                                        isAchieved ? 'text-green-400' : isOverdue ? 'text-red-400' : 'text-blue-400'
+                                                    }`}>
+                                                        {Math.round(progress)}% Complete
+                                                    </div>
+                                                    {progress > 0 && (
+                                                        <div className="text-xs text-zinc-500">
+                                                            {formatCurrency(goal.target_amount - goal.current_amount)} remaining
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
+                                        
                                         {goal.target_date && (
-                                            <div className="flex items-center text-sm text-zinc-400">
-                                                <Calendar className="w-4 h-4 mr-2" />
-                                                Target Date: {format(new Date(goal.target_date), "MMM dd, yyyy")}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center text-zinc-400 group-hover:text-zinc-300 transition-colors duration-300">
+                                                    <Calendar className="w-4 h-4 mr-2" />
+                                                    <span>Due: {format(new Date(goal.target_date), "MMM dd, yyyy")}</span>
+                                                </div>
                                                 {isOverdue && (
-                                                    <Badge variant="destructive" className="ml-2 bg-red-800/50 text-red-300">Overdue</Badge>
+                                                    <Badge variant="destructive" className="bg-gradient-to-r from-red-600 to-red-700 text-red-100 shadow-red-600/25 animate-pulse">
+                                                        Overdue
+                                                    </Badge>
                                                 )}
                                             </div>
                                         )}
+                                        
                                         {isAchieved && (
-                                            <div className="flex items-center text-green-400 font-medium">
-                                                <BadgeCheck className="w-5 h-5 mr-2" />
-                                                Goal Achieved!
+                                            <div className="flex items-center justify-center text-green-400 font-bold text-sm bg-green-500/10 rounded-xl py-3 px-4 border border-green-500/20">
+                                                <BadgeCheck className="w-5 h-5 mr-2 animate-pulse" />
+                                                🎉 Goal Achieved! Congratulations!
                                             </div>
                                         )}
                                     </CardContent>
-                                    <CardFooter className="flex justify-end gap-2 pt-4">
+                                    <CardFooter className="flex justify-end gap-3 pt-6 border-t border-zinc-800/50">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => handleEditClick(goal)}
-                                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
+                                            className="group/btn border-zinc-700/60 text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-100 hover:border-zinc-600 backdrop-blur-sm transition-all duration-300"
                                         >
-                                            <Edit className="w-4 h-4 mr-2" />Edit
+                                            <Edit className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform duration-300" />
+                                            Edit
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => handleDeleteGoal(goal.id)}
+                                            className="group/btn bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-500 hover:to-red-600 border-0 backdrop-blur-sm transition-all duration-300"
                                         >
-                                            <Trash2 className="w-4 h-4 mr-2" />Delete
+                                            <Trash2 className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform duration-300" />
+                                            Delete
                                         </Button>
                                     </CardFooter>
                                 </MotionCard>
@@ -500,68 +933,171 @@ export default function SavingsGoals() {
                 )}
             </div>
 
-            {/* Add/Edit Goal Dialog */}
+            {/* Enhanced Add/Edit Goal Dialog */}
             <AnimatePresence>
                 {openDialog && (
                     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                        <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-zinc-800 text-zinc-50">
-                            <DialogHeader>
-                                <DialogTitle className="text-zinc-50">{isEditing ? "Edit Savings Goal" : "Add New Savings Goal"}</DialogTitle>
-                            </DialogHeader>
-                            <motion.form 
-                                onSubmit={handleSubmit} 
-                                className="grid gap-4 py-4"
+                        <DialogContent className="sm:max-w-[420px] border-zinc-700/50 bg-gradient-to-br from-zinc-900/95 to-zinc-950/95 backdrop-blur-xl text-zinc-50">
+                            <motion.div
                                 variants={modalVariants}
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
                             >
-                                <div className="grid gap-2">
-                                    <label htmlFor="name" className="text-sm font-medium text-zinc-300">Name</label>
-                                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Down Payment for House" required disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
-                                </div>
-                                <div className="grid gap-2">
-                                    <label htmlFor="description" className="text-sm font-medium text-zinc-300">Description (Optional)</label>
-                                    <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A brief description of your goal" disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100 min-h-[80px]" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <DialogHeader className="text-center mb-3">
+                                    
+                                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-zinc-50 to-zinc-300 bg-clip-text text-transparent">
+                                        {isEditing ? "Edit Savings Goal" : "Create New Goal"}
+                                    </DialogTitle>
+                                    <p className="text-zinc-400 text-xs mt-1">
+                                        {isEditing ? "Update your goal details" : "Set up your financial target"}
+                                    </p>
+                                </DialogHeader>
+                                <form onSubmit={handleSubmit} className="grid gap-4 py-1 relative z-[10002]">
                                     <div className="grid gap-2">
-                                        <label htmlFor="targetAmount" className="text-sm font-medium text-zinc-300">Target Amount (₹)</label>
-                                        <Input id="targetAmount" type="number" step="0.01" min="0.01" value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} required disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
+                                        <label htmlFor="name" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                            Goal Name *
+                                        </label>
+                                        <Input 
+                                            id="name" 
+                                            value={name} 
+                                            onChange={(e) => setName(e.target.value)} 
+                                            placeholder="e.g., Emergency Fund, Dream Vacation, New Car" 
+                                            required 
+                                            disabled={submitting} 
+                                            className="transition-all duration-300" 
+                                        />
                                     </div>
+                                    
                                     <div className="grid gap-2">
-                                        <label htmlFor="currentAmount" className="text-sm font-medium text-zinc-300">Current Amount (₹)</label>
-                                        <Input id="currentAmount" type="number" step="0.01" min="0" value={currentAmount} onChange={(e) => setCurrentAmount(e.target.value)} required disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
+                                        <label htmlFor="description" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                                            Description (Optional)
+                                        </label>
+                                        <Textarea 
+                                            id="description" 
+                                            value={description} 
+                                            onChange={(e) => setDescription(e.target.value)} 
+                                            placeholder="Describe your goal and what it means to you..." 
+                                            disabled={submitting} 
+                                            className="transition-all duration-300" 
+                                        />
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <label htmlFor="targetDate" className="text-sm font-medium text-zinc-300">Target Date (Optional)</label>
-                                        <Input id="targetDate" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={submitting} className="bg-zinc-800 border-zinc-700 text-zinc-100" />
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid gap-2">
+                                            <label htmlFor="targetAmount" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                                Target Amount (₹) *
+                                            </label>
+                                            <Input 
+                                                id="targetAmount" 
+                                                type="number" 
+                                                step="0.01" 
+                                                min="0.01" 
+                                                value={targetAmount} 
+                                                onChange={(e) => setTargetAmount(e.target.value)} 
+                                                placeholder="0.00"
+                                                required 
+                                                disabled={submitting} 
+                                                className="transition-all duration-300" 
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label htmlFor="currentAmount" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+                                                Current Amount (₹) *
+                                            </label>
+                                            <Input 
+                                                id="currentAmount" 
+                                                type="number" 
+                                                step="0.01" 
+                                                min="0" 
+                                                value={currentAmount} 
+                                                onChange={(e) => setCurrentAmount(e.target.value)} 
+                                                placeholder="0.00"
+                                                required 
+                                                disabled={submitting} 
+                                                className="transition-all duration-300" 
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="grid gap-2">
-                                        <label htmlFor="priority" className="text-sm font-medium text-zinc-300">Priority</label>
-                                        <Select value={priority} onValueChange={setPriority} disabled={submitting}>
-                                            <SelectTrigger className="w-full bg-zinc-800 border-zinc-700 text-zinc-100"><SelectValue placeholder="Select priority" /></SelectTrigger>
-                                            <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-                                                <SelectItem value="low">Low</SelectItem>
-                                                <SelectItem value="medium">Medium</SelectItem>
-                                                <SelectItem value="high">High</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid gap-2">
+                                            <label htmlFor="targetDate" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                                                Target Date (Optional)
+                                            </label>
+                                            <Input 
+                                                id="targetDate" 
+                                                type="date" 
+                                                value={targetDate} 
+                                                onChange={(e) => setTargetDate(e.target.value)} 
+                                                disabled={submitting} 
+                                                className="transition-all duration-300" 
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label htmlFor="priority" className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                                Priority Level
+                                            </label>
+                                            <Select value={priority} onValueChange={setPriority} disabled={submitting}>
+                                                <SelectTrigger className="w-full transition-all duration-300">
+                                                    <SelectValue placeholder="Select priority level" />
+                                                </SelectTrigger>
+                                                <SelectContent className="border-zinc-700/50 bg-zinc-900/95 backdrop-blur-xl text-zinc-100">
+                                                    <SelectItem value="low">🟢 Low Priority</SelectItem>
+                                                    <SelectItem value="medium">🟡 Medium Priority</SelectItem>
+                                                    <SelectItem value="high">🔴 High Priority</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
-                                </div>
-                                <DialogFooter className="mt-4">
-                                    <div className="grid grid-cols-2 gap-4 w-full">
-                                        <Button type="button" variant="outline" onClick={() => { setOpenDialog(false); resetForm(); }} disabled={submitting} className="border-zinc-700 w-full text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50">Cancel</Button>
-                                        <Button type="submit" disabled={submitting} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                            {submitting ? (
-                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
-                                            ) : (isEditing ? "Save Changes" : "Add Goal")}
-                                        </Button>
-                                    </div>
-                                </DialogFooter>
-                            </motion.form>
+                                    
+                                    <DialogFooter className="mt-1 pt-1 border-t border-zinc-800/50">
+                                        <div className="grid grid-cols-2 gap-3 w-full">
+                                            <Button 
+                                                type="button" 
+                                                variant="outline" 
+                                                onClick={() => { setOpenDialog(false); resetForm(); }} 
+                                                disabled={submitting} 
+                                                className="w-full transition-all duration-300 text-xs"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button 
+                                                type="submit" 
+                                                disabled={submitting || !name.trim() || !targetAmount || currentAmount === ""} 
+                                                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg shadow-blue-600/25 w-full transition-all duration-300 text-xs"
+                                            >
+                                                {submitting ? (
+                                                    <>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                        {isEditing ? "Updating..." : "Creating..."}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {isEditing ? (
+                                                            <>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Save Changes
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Plus className="mr-2 h-4 w-4" />
+                                                                Create Goal
+                                                            </>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </DialogFooter>
+                                </form>
+                            </motion.div>
                         </DialogContent>
                     </Dialog>
                 )}

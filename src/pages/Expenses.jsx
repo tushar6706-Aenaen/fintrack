@@ -231,17 +231,21 @@ export default function Expenses() {
     }
     loadAll();
     const channel = supabase
-      .channel('expenses-changes')
+      .channel(`expenses_${user.id}`)
       .on("postgres_changes", {
         event: "*",
         schema: "public",
         table: "expenses",
         filter: `user_id=eq.${user.id}`
-      }, () => {
+      }, (payload) => {
+        console.log("Real-time update received for expenses:", payload);
         loadExpenses();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Expenses subscription status:", status);
+      });
     return () => {
+      console.log("Cleaning up expenses subscription");
       supabase.removeChannel(channel);
     };
   }, [user, authLoading, sortBy, sortOrder, loadAll, loadExpenses]);
@@ -424,55 +428,9 @@ export default function Expenses() {
   }, [formData, selectedExpense, userId, resetForm, toast, loadExpenses]);
 
   const handleDeleteExpense = useCallback(async () => {
-    if (!selectedExpense) return;
-    toast({
-      title: "Confirm Deletion",
-      description: `Are you sure you want to delete "${selectedExpense.title}"? This action cannot be undone.`,
-      variant: "destructive",
-      action: (
-        <Button
-          onClick={async () => {
-            setSubmitting(true);
-            try {
-              const { error } = await supabase
-                .from("expenses")
-                .delete()
-                .eq("id", selectedExpense.id)
-                .eq("user_id", userId);
-              if (error) {
-                toast({
-                  title: "Deletion Failed",
-                  description: error.message,
-                  variant: "destructive"
-                });
-              } else {
-                setShowDeleteModal(false);
-                setSelectedExpense(null);
-                toast({
-                  title: "Expense Deleted!",
-                  description: `"${selectedExpense.title}" was successfully removed.`,
-                  variant: "success",
-                });
-                await loadExpenses();
-              }
-            } catch (err) {
-              toast({
-                title: "Unexpected Error",
-                description: `An unexpected error occurred: ${err.message}`,
-                variant: "destructive"
-              });
-            } finally {
-              setSubmitting(false);
-            }
-          }}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          Confirm Delete
-        </Button>
-      ),
-    });
-    setShowDeleteModal(false);
-  }, [selectedExpense, userId, toast, loadExpenses]);
+    // This function is now handled directly in the Delete Modal
+    // The actual deletion logic is in the modal's onClick handler
+  }, []);
 
   const openEditModal = useCallback((expense) => {
     setSelectedExpense(expense);
@@ -563,7 +521,10 @@ export default function Expenses() {
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              <Button onClick={() => setShowAddModal(true)} className="bg-zinc-50 hover:bg-zinc-200 text-zinc-900">
+              <Button onClick={() => {
+                resetForm();
+                setShowAddModal(true);
+              }} className="bg-zinc-50 hover:bg-zinc-200 text-zinc-900">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Expense
               </Button>
@@ -734,7 +695,10 @@ export default function Expenses() {
                     }
                   </p>
                   {!searchTerm && !selectedCategory && !dateRange && !paymentMethodFilter && (
-                    <Button onClick={() => setShowAddModal(true)} className="bg-zinc-50 text-zinc-900">
+                    <Button onClick={() => {
+                      resetForm();
+                      setShowAddModal(true);
+                    }} className="bg-zinc-50 text-zinc-900">
                       <Plus className="w-4 h-4 mr-2" />
                       Add First Expense
                     </Button>
@@ -864,7 +828,7 @@ export default function Expenses() {
           </Card>
         </div>
       </div>
-      {/* Add Modal Component Here */}
+      {/* Add Modal */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className="sm:max-w-[425px] bg-zinc-900 text-zinc-50 border-zinc-800">
           <DialogHeader>
@@ -875,11 +839,11 @@ export default function Expenses() {
           </DialogHeader>
           <form onSubmit={handleAddExpense} className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right text-zinc-300">
+              <Label htmlFor="add-title" className="text-right text-zinc-300">
                 Title
               </Label>
               <Input
-                id="title"
+                id="add-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
@@ -887,11 +851,11 @@ export default function Expenses() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right text-zinc-300">
+              <Label htmlFor="add-amount" className="text-right text-zinc-300">
                 Amount
               </Label>
               <Input
-                id="amount"
+                id="add-amount"
                 type="number"
                 step="0.01"
                 value={formData.amount}
@@ -901,11 +865,11 @@ export default function Expenses() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right text-zinc-300">
+              <Label htmlFor="add-date" className="text-right text-zinc-300">
                 Date
               </Label>
               <Input
-                id="date"
+                id="add-date"
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -914,7 +878,7 @@ export default function Expenses() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right text-zinc-300">
+              <Label htmlFor="add-category" className="text-right text-zinc-300">
                 Category
               </Label>
               <Select
@@ -935,7 +899,7 @@ export default function Expenses() {
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="payment_method" className="text-right text-zinc-300">
+              <Label htmlFor="add-payment_method" className="text-right text-zinc-300">
                 Payment
               </Label>
               <Select
@@ -955,11 +919,11 @@ export default function Expenses() {
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right text-zinc-300">
+              <Label htmlFor="add-description" className="text-right text-zinc-300">
                 Description
               </Label>
               <Textarea
-                id="description"
+                id="add-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700"
@@ -967,6 +931,14 @@ export default function Expenses() {
               />
             </div>
             <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowAddModal(false)}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              >
+                Cancel
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200">
                 {submitting ? (
                   <>
@@ -979,6 +951,233 @@ export default function Expenses() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="sm:max-w-[425px] bg-zinc-900 text-zinc-50 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+            <DialogDescription>
+              Update the details for this expense.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditExpense} className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-title" className="text-right text-zinc-300">
+                Title
+              </Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-amount" className="text-right text-zinc-300">
+                Amount
+              </Label>
+              <Input
+                id="edit-amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                required
+                className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-date" className="text-right text-zinc-300">
+                Date
+              </Label>
+              <Input
+                id="edit-date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                required
+                className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-category" className="text-right text-zinc-300">
+                Category
+              </Label>
+              <Select
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                value={formData.category_id}
+                required
+              >
+                <SelectTrigger className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 text-zinc-50 border-zinc-800">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-payment_method" className="text-right text-zinc-300">
+                Payment
+              </Label>
+              <Select
+                onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
+                value={formData.payment_method}
+              >
+                <SelectTrigger className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700">
+                  <SelectValue placeholder="Select a payment method" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 text-zinc-50 border-zinc-800">
+                  {Object.entries(paymentMethodLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-description" className="text-right text-zinc-300">
+                Description
+              </Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="col-span-3 bg-zinc-800 text-zinc-50 border-zinc-700"
+                rows={3}
+              />
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedExpense(null);
+                  resetForm();
+                }}
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting} className="bg-zinc-50 text-zinc-900 hover:bg-zinc-200">
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Expense"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="sm:max-w-[425px] bg-zinc-900 text-zinc-50 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="w-5 h-5" />
+              Delete Expense
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this expense? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedExpense && (
+            <div className="py-4">
+              <div className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
+                    {selectedExpense.categories?.icon || "💰"}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-zinc-50">{selectedExpense.title}</h4>
+                    <p className="text-sm text-zinc-400">
+                      {selectedExpense.categories?.name} • {formatCurrency(selectedExpense.amount)}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {format(parseISO(selectedExpense.date), "MMM dd, yyyy")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteModal(false);
+                setSelectedExpense(null);
+              }}
+              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={async () => {
+                if (!selectedExpense) return;
+                setSubmitting(true);
+                try {
+                  const { error } = await supabase
+                    .from("expenses")
+                    .delete()
+                    .eq("id", selectedExpense.id)
+                    .eq("user_id", userId);
+                  
+                  if (error) {
+                    toast({
+                      title: "Deletion Failed",
+                      description: error.message,
+                      variant: "destructive"
+                    });
+                  } else {
+                    setShowDeleteModal(false);
+                    setSelectedExpense(null);
+                    toast({
+                      title: "Expense Deleted!",
+                      description: `"${selectedExpense.title}" was successfully removed.`,
+                      variant: "success",
+                    });
+                    await loadExpenses();
+                  }
+                } catch (err) {
+                  toast({
+                    title: "Unexpected Error",
+                    description: `An unexpected error occurred: ${err.message}`,
+                    variant: "destructive"
+                  });
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+              disabled={submitting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Expense"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
