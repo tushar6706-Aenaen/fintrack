@@ -30,24 +30,28 @@ Framer Motion
 
 Backend & Database
 
-<<<<<<< HEAD
 Supabase (Postgres, Auth, Realtime)
-=======
-Supabase (Postgres, Auth, API)
->>>>>>> e4566042dbe3f04123b075741c722cfc57a5593f
 
 Deployment
 
-Frontend → Vercel / Netlify
+Frontend → Vercel 
 
 Backend + Database → Supabase
 
-<<<<<<< HEAD
-📂 Project Structure /src ├── components → UI components (shadcn + custom) ├── pages → App pages (Dashboard, Login, Register, etc.) ├── hooks → Custom React hooks ├── lib → Supabase client setup ├── context → Auth & App context └── utils → Helpers & formatters
+
+📂 Project Structure
+/src ├── components → UI components (shadcn + custom)
+├── pages → App pages (Dashboard, Login, Register, etc.)
+├── hooks → Custom React hooks 
+├── lib → Supabase client setup 
+├── context → Auth & App context 
+   └── utils → Helpers & formatters
 
 ⚙️ Installation & Setup
 
-Clone the repo git clone https://github.com/your-username/expense-tracker.git cd expense-tracker
+Clone the repo git clone https://github.com/tushar6706-Aenaen/fintrack.git 
+
+cd fintrack  
 
 Install dependencies npm install
 
@@ -95,28 +99,7 @@ Expense List
 
 Budget Planner
 
-Analytics Charts
+Analytics Chart
 
-📌 Roadmap
 
-<<<<<<< HEAD
-Add recurring expenses
 
-Budget alerts (email/notifications via Supabase)
-
-Dark mode toggle
-
-Export data (CSV/PDF)
-
-Mobile app (Expo + Supabase)
-=======
- Add recurring expenses
-
- Budget alerts (email/notifications via Supabase)
-
- Dark mode toggle
-
- Export data (CSV/PDF)
-
- Mobile app (Expo + Supabase)
->>>>>>> e4566042dbe3f04123b075741c722cfc57a5593f
