@@ -18,7 +18,7 @@ export default function Footer() {
             <div className="flex items-center gap-2 text-zinc-500 text-sm">
               <span>Made with</span>
               <Heart className="w-4 h-4 text-red-500" />
-              <span>by Tushar Chauhankar</span>
+              <span>by Tushar Chauhan</span>
             </div>
           </div>
 
@@ -78,7 +78,7 @@ export default function Footer() {
                 <span>LinkedIn</span>
               </a>
               <a 
-                href="mailto:chauhantushar6700@gmail.com" 
+                href="mailto:chauhantushar6706@gmail.com" 
                 className="flex items-center gap-3 text-zinc-400 hover:text-blue-400 transition-colors duration-200 text-sm group"
               >
                 <Mail className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
