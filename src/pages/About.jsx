@@ -76,7 +76,7 @@ export default function About() {
 
     return (
         <motion.div
-            className="min-h-screen bg-zinc-950 relative overflow-hidden"
+            className="min-h-screen bg-zinc-9 relative overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -179,7 +179,7 @@ export default function About() {
                         <CardContent>
                             <div className="max-w-4xl mx-auto text-center">
                                 <div className="mb-8">
-                                    <h3 className="text-2xl font-bold text-zinc-100 mb-2">Tushar Chauhankar</h3>
+                                    <h3 className="text-2xl font-bold text-zinc-100 mb-2">Tushar Chauhan</h3>
                                     <p className="text-zinc-300 text-lg mb-4">Full Stack Developer & Financial Technology Enthusiast</p>
                                     <div className="flex flex-wrap justify-center gap-2 mb-6">
                                         <Badge variant="default">React Developer</Badge>
@@ -206,7 +206,7 @@ export default function About() {
                                         <span className="font-medium">GitHub</span>
                                     </a>
                                     <a 
-                                        href="https://linkedin.com/in/tushar-chauhankar" 
+                                        href="https://www.linkedin.com/in/tushar-chauhan-a7a112365/" 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-xl text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl shadow-blue-600/25"
