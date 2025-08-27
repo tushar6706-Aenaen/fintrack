@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabaseClient"; // Ensure this path is correct
 
 import Layout from "./components/Layout";
+import PublicLayout from "./components/PublicLayout";
 import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import Budgets from "./pages/Budgets";
@@ -10,6 +11,9 @@ import Reports from "./pages/Reports";
 import AuthPage from "./pages/AuthPage"; // New AuthPage
 import SavingsGoals from "./pages/SavingsGoals";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
 import { Toaster } from "./components/ui/toaster";
 
 export default function App() {
@@ -79,6 +83,13 @@ export default function App() {
             <Routes>
                 {/* Public Auth Route */}
                 <Route path="/auth" element={<AuthPage />} />
+                
+                {/* Public Footer Pages with Layout */}
+                <Route element={<Layout isPublic={true} />}>
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                </Route>
 
                 {/* Protected Routes - Render Layout only if user is authenticated */}
                 {user ? (

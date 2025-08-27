@@ -135,7 +135,7 @@ const mobileItemVariants = {
     }
 };
 
-export default function AnimatedHeader({ user, onSignOut }) {
+export default function AnimatedHeader({ user, onSignOut, isPublic = false }) {
     const { pathname } = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -176,6 +176,18 @@ export default function AnimatedHeader({ user, onSignOut }) {
     }, [isMobileMenuOpen]);
 
     const getCurrentPageName = () => {
+        if (isPublic) {
+            switch (pathname) {
+                case '/about':
+                    return 'About Us';
+                case '/contact':
+                    return 'Contact';
+                case '/privacy':
+                    return 'Privacy Policy';
+                default:
+                    return 'Fintrack';
+            }
+        }
         const currentLink = links.find(link => link.path === pathname);
         return currentLink?.name || "Dashboard";
     };
@@ -243,11 +255,12 @@ export default function AnimatedHeader({ user, onSignOut }) {
                         </div>
                     </motion.div>
 
-                {/* Middle Section - Navigation Links (Desktop) */}
-                <nav className="hidden lg:flex items-center gap-2">
-                    {links.map((link, index) => {
-                        const Icon = link.icon;
-                        const active = pathname === link.path;
+                {/* Middle Section - Navigation Links (Desktop) - Only show if not public */}
+                {!isPublic && (
+                    <nav className="hidden lg:flex items-center gap-2">
+                        {links.map((link, index) => {
+                            const Icon = link.icon;
+                            const active = pathname === link.path;
 
                         return (
                             <motion.div
@@ -304,12 +317,37 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             </motion.div>
                         );
                     })}
-                </nav>
+                    </nav>
+                )}
 
                 {/* Right Section - Actions and User */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                    {/* User Profile */}
-                    {user ? (
+                    {/* Show navigation links for public pages */}
+                    {isPublic && (
+                        <div className="hidden sm:flex items-center gap-4 mr-4">
+                            <Link 
+                                to="/about" 
+                                className={`text-sm font-medium transition-colors duration-200 ${pathname === '/about' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                About
+                            </Link>
+                            <Link 
+                                to="/contact" 
+                                className={`text-sm font-medium transition-colors duration-200 ${pathname === '/contact' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                Contact
+                            </Link>
+                            <Link 
+                                to="/privacy" 
+                                className={`text-sm font-medium transition-colors duration-200 ${pathname === '/privacy' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                Privacy
+                            </Link>
+                        </div>
+                    )}
+                    
+                    {/* User Profile - Only show if not public */}
+                    {!isPublic && user ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <motion.div
@@ -397,7 +435,7 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                    ) : (
+                    ) : !isPublic ? (
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -409,9 +447,27 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 asChild
                                 className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-lg sm:rounded-xl px-3 sm:px-6 py-2 text-sm shadow-lg shadow-violet-500/25 font-medium"
                             >
-                                <Link to="/login" className="flex items-center gap-2">
+                                <Link to="/auth" className="flex items-center gap-2">
                                     <Sparkles className="w-4 h-4" />
                                     <span className="hidden sm:inline">Log In</span>
+                                </Link>
+                            </Button>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.6 }}
+                        >
+                            <Button
+                                asChild
+                                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg sm:rounded-xl px-3 sm:px-6 py-2 text-sm shadow-lg shadow-blue-500/25 font-medium"
+                            >
+                                <Link to="/auth" className="flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Get Started</span>
                                 </Link>
                             </Button>
                         </motion.div>
@@ -497,11 +553,13 @@ export default function AnimatedHeader({ user, onSignOut }) {
                             className="flex-1 p-4 space-y-3 overflow-y-auto relative z-10"
                             variants={mobileItemVariants}
                         >
-                            {links.map((link, index) => {
-                                const Icon = link.icon;
-                                const active = pathname === link.path;
-
-                                return (
+                            {isPublic ? (
+                                // Public page navigation
+                                [
+                                    { name: "About", path: "/about" },
+                                    { name: "Contact", path: "/contact" },
+                                    { name: "Privacy", path: "/privacy" }
+                                ].map((link, index) => (
                                     <motion.div
                                         key={link.path}
                                         variants={mobileItemVariants}
@@ -526,14 +584,55 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                         <Link
                                             to={link.path}
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ${active
-                                                    ? `bg-gradient-to-r ${link.color} text-white shadow-xl shadow-current/20 border border-white/10`
+                                            className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ${
+                                                pathname === link.path
+                                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xl shadow-blue-600/20 border border-white/10"
                                                     : "text-zinc-300 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 hover:border-zinc-600/50"
-                                                }`}
+                                            }`}
                                         >
-                                            {/* No shimmer effect on mobile for performance */}
+                                            <span className="relative z-10">{link.name}</span>
+                                        </Link>
+                                    </motion.div>
+                                ))
+                            ) : (
+                                // Authenticated user navigation
+                                links.map((link, index) => {
+                                    const Icon = link.icon;
+                                    const active = pathname === link.path;
 
-                                            {/* Icon container - no animations on mobile */}
+                                    return (
+                                        <motion.div
+                                            key={link.path}
+                                            variants={mobileItemVariants}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ 
+                                                opacity: 1, 
+                                                y: 0,
+                                                transition: { 
+                                                    delay: 0.05 + index * 0.05,
+                                                    duration: 0.3,
+                                                    ease: "easeOut"
+                                                }
+                                            }}
+                                            whileHover={{ 
+                                                scale: 1.02, 
+                                                x: 4,
+                                                transition: { duration: 0.2 }
+                                            }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="relative"
+                                        >
+                                            <Link
+                                                to={link.path}
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ${active
+                                                        ? `bg-gradient-to-r ${link.color} text-white shadow-xl shadow-current/20 border border-white/10`
+                                                        : "text-zinc-300 hover:text-white bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 hover:border-zinc-600/50"
+                                                    }`}
+                                            >
+                                                {/* No shimmer effect on mobile for performance */}
+
+                                                {/* Icon container - no animations on mobile */}
                                             <div 
                                                 className={`relative p-2.5 rounded-xl ${active
                                                         ? "bg-white/20 shadow-lg"
@@ -578,11 +677,34 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                         </Link>
                                     </motion.div>
                                 );
-                            })}
+                            })
+                            )}
                         </motion.nav>
 
                         {/* Bottom Actions */}
-                        {user && (
+                        {!isPublic ? (
+                            user && (
+                                <motion.div
+                                    variants={mobileItemVariants}
+                                    className="p-4 border-t border-zinc-800/50 relative z-10"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    <Button
+                                        onClick={() => {
+                                            console.log("Mobile logout button clicked");
+                                            setIsMobileMenuOpen(false);
+                                            onSignOut();
+                                        }}
+                                        className="w-full mb-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold flex items-center justify-center gap-3 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-red-500/25"
+                                    >
+                                        <LogOut className="w-5 h-5" />
+                                        Sign Out
+                                    </Button>
+                                </motion.div>
+                            )
+                        ) : (
                             <motion.div
                                 variants={mobileItemVariants}
                                 className="p-4 border-t border-zinc-800/50 relative z-10"
@@ -590,17 +712,14 @@ export default function AnimatedHeader({ user, onSignOut }) {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
                             >
-                                <Button
-                                    onClick={() => {
-                                        console.log("Mobile logout button clicked");
-                                        setIsMobileMenuOpen(false);
-                                        onSignOut();
-                                    }}
-                                    className="w-full mb-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold flex items-center justify-center gap-3 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-red-500/25"
+                                <Link
+                                    to="/auth"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold flex items-center justify-center gap-3 py-3 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25"
                                 >
-                                    <LogOut className="w-5 h-5" />
-                                    Sign Out
-                                </Button>
+                                    <Sparkles className="w-5 h-5" />
+                                    Get Started
+                                </Link>
                             </motion.div>
                         )}
                     </motion.div>
