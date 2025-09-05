@@ -115,8 +115,6 @@ const ReportsPage = () => {
     const [categories, setCategories] = useState([]);
     const [savingsGoals, setSavingsGoals] = useState([]);
     const [budgets, setBudgets] = useState([]);
-    const [groups, setGroups] = useState([]); // State for groups
-    const [selectedGroupId, setSelectedGroupId] = useState('personal'); // New state for selected group view
 
     const [activeFilter, setActiveFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -127,8 +125,6 @@ const ReportsPage = () => {
     const [aiTips, setAiTips] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
 
-    // States for Group Modals
-   
     // Initialize auth state
     useEffect(() => {
         let mounted = true;
@@ -167,7 +163,7 @@ const ReportsPage = () => {
         };
     }, []);
 
-    // Load all necessary data when user changes or on mount/selectedGroupId change
+    // Load all necessary data when user changes or on mount
     const loadAllData = async () => {
         setLoading(true);
         setError("");
@@ -178,72 +174,26 @@ const ReportsPage = () => {
                 return;
             }
 
-            // Always fetch groups the user is a member of
-            const { data: groupsData, error: groupsError } = await supabase
-                .from("groups")
-                .select("*")
-                .contains('members', [userId]);
-            if (groupsError) throw groupsError;
-            setGroups(groupsData || []);
-            console.log("ReportsPage: Fetched groupsData (after setGroups):", groupsData);
+            // Fetch personal data (where group_id is NULL)
+            const [{ data: expData, error: expError },
+                   { data: incData, error: incError },
+                   { data: catData, error: catError },
+                   { data: sgData, error: sgError },
+                   { data: budData, error: budError }] = await Promise.all([
+                supabase.from("expenses").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
+                supabase.from("income").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
+                supabase.from("categories").select("id, name, icon, color").eq("user_id", userId).eq("is_active", true),
+                supabase.from("savings_goals").select("*").eq("user_id", userId),
+                supabase.from("budgets").select("*").eq("user_id", userId).is("group_id", null).eq("is_active", true)
+            ]);
+            if (expError) throw expError; if (incError) throw incError; if (catError) throw catError;
+            if (sgError) throw sgError; if (budError) throw budError;
 
-            let expensesData = [];
-            let incomeData = [];
-            let categoriesData = [];
-            let savingsGoalsData = [];
-            let budgetsData = [];
-
-            if (selectedGroupId === 'personal') {
-                // Fetch personal data (where group_id is NULL)
-                const [{ data: expData, error: expError },
-                       { data: incData, error: incError },
-                       { data: catData, error: catError },
-                       { data: sgData, error: sgError },
-                       { data: budData, error: budError }] = await Promise.all([
-                    supabase.from("expenses").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
-                    supabase.from("income").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
-                    supabase.from("categories").select("id, name, icon, color").eq("user_id", userId).eq("is_active", true),
-                    supabase.from("savings_goals").select("*").eq("user_id", userId),
-                    supabase.from("budgets").select("*").eq("user_id", userId).is("group_id", null).eq("is_active", true)
-                ]);
-                if (expError) throw expError; if (incError) throw incError; if (catError) throw catError;
-                if (sgError) throw sgError; if (budError) throw budError;
-
-                expensesData = expData;
-                incomeData = incData;
-                categoriesData = catData;
-                savingsGoalsData = sgData;
-                budgetsData = budData;
-
-            } else {
-                // Fetch group data (where group_id matches selectedGroupId)
-                const [{ data: expData, error: expError },
-                       { data: incData, error: incError },
-                       { data: catData, error: catError }, // Categories are still user-specific
-                       { data: sgData, error: sgError }, // Savings goals are still user-specific
-                       { data: budData, error: budError }] = await Promise.all([
-                    supabase.from("expenses").select("*").eq("group_id", selectedGroupId).order("date", { ascending: false }),
-                    supabase.from("income").select("*").eq("group_id", selectedGroupId).order("date", { ascending: false }),
-                    supabase.from("categories").select("id, name, icon, color").eq("user_id", userId).eq("is_active", true), // Categories are fetched for the current user's categories
-                    supabase.from("savings_goals").select("*").eq("user_id", userId), // Savings goals are fetched for the current user's goals
-                    supabase.from("budgets").select("*").eq("group_id", selectedGroupId).eq("is_active", true)
-                ]);
-                if (expError) throw expError; if (incError) throw incError; if (catError) throw catError;
-                if (sgError) throw sgError; if (budError) throw budError;
-
-                expensesData = expData;
-                incomeData = incData;
-                categoriesData = catData; // Still fetch user's categories for display
-                savingsGoalsData = sgData; // Still fetch user's savings goals
-                budgetsData = budData;
-            }
-
-            setExpenses(expensesData || []);
-            setIncome(incomeData || []);
-            setCategories(categoriesData || []);
-            setSavingsGoals(savingsGoalsData || []);
-            setBudgets(budgetsData || []);
-
+            setExpenses(expData || []);
+            setIncome(incData || []);
+            setCategories(catData || []);
+            setSavingsGoals(sgData || []);
+            setBudgets(budData || []);
 
         } catch (err) {
             setError(`Failed to load data: ${err.message}`);
@@ -252,7 +202,7 @@ const ReportsPage = () => {
         }
     };
 
-    // Effect to trigger data load when user changes or on mount/selectedGroupId change
+    // Effect to trigger data load when user changes or on mount
     useEffect(() => {
         if (authLoading) return;
         if (!user) {
@@ -276,26 +226,8 @@ const ReportsPage = () => {
             supabase.channel('user-settings-changes')
                 .on("postgres_changes", { event: "*", schema: "public", table: "categories", filter: `user_id=eq.${userId}` }, () => loadAllData())
                 .on("postgres_changes", { event: "*", schema: "public", table: "savings_goals", filter: `user_id=eq.${userId}` }, () => loadAllData())
-                .subscribe(),
-            // Groups where the user is a member (this will trigger when you join a new group!)
-            supabase.channel('user-groups-changes')
-                .on("postgres_changes", { event: "*", schema: "public", table: "groups", filter: `members.cs.{${JSON.stringify(userId)}}` }, (payload) => {
-                    console.log("ReportsPage: Realtime group update detected:", payload);
-                    loadAllData(); // Refresh all data including groups
-                })
                 .subscribe()
         ];
-
-        // If a group is selected, also listen for changes in that specific group's data
-        if (selectedGroupId !== 'personal') {
-            channelsToSubscribe.push(
-                supabase.channel(`group-${selectedGroupId}-data-changes`)
-                    .on("postgres_changes", { event: "*", schema: "public", table: "expenses", filter: `group_id=eq.${selectedGroupId}` }, () => loadAllData())
-                    .on("postgres_changes", { event: "*", schema: "public", table: "income", filter: `group_id=eq.${selectedGroupId}` }, () => loadAllData())
-                    .on("postgres_changes", { event: "*", schema: "public", table: "budgets", filter: `group_id=eq.${selectedGroupId}` }, () => loadAllData())
-                    .subscribe()
-            );
-        }
 
         return () => {
             channelsToSubscribe.forEach(channel => {
@@ -304,7 +236,7 @@ const ReportsPage = () => {
                 }
             });
         };
-    }, [user?.id, authLoading, selectedGroupId]);
+    }, [user?.id, authLoading]);
 
 
     // Derive reports and quick stats from fetched data
@@ -377,11 +309,8 @@ const ReportsPage = () => {
 
             const expensesForBudgetPeriod = expenses.filter(exp => {
                 const expenseDate = parseISO(exp.date);
-                const matchesGroupFilter = selectedGroupId === 'personal'
-                    ? exp.group_id === null
-                    : exp.group_id === selectedGroupId;
-
-                return matchesGroupFilter &&
+                // Only personal expenses
+                return exp.group_id === null &&
                        isWithinInterval(expenseDate, { start: budgetStartDate, end: budgetEndDate }) &&
                        (budget.category_id ? exp.category_id === budget.category_id : true);
             });
@@ -559,7 +488,7 @@ const ReportsPage = () => {
             totalIncome: calculatedTotalIncome,
             netIncome: calculatedNetIncome
         };
-    }, [expenses, income, categories, savingsGoals, budgets, dateRange, selectedGroupId]);
+    }, [expenses, income, categories, savingsGoals, budgets, dateRange]);
 
 
     const filteredReports = generatedReports.filter(report => {
