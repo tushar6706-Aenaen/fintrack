@@ -716,10 +716,8 @@ export default function Expenses() {
                       <motion.div
                         key={expense.id}
                         variants={cardItemVariants}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-br from-zinc-950 to-zinc-900 rounded-lg border border-zinc-700">
+                        <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-br from-zinc-950 to-zinc-900 rounded-lg border border-zinc-700">
                           <FloatingParticles/>
                           <div className="flex items-center gap-4 flex-1 mb-3 sm:mb-0">
                             <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
@@ -771,7 +769,11 @@ export default function Expenses() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => openEditModal(expense)}
+                                onClick={() => {
+                                  console.log('Edit button clicked for expense:', expense.id);
+                                  openEditModal(expense);
+                                }}
+                                type="button"
                                 className="text-zinc-400 hover:text-blue-400 p-1"
                               >
                                 <Edit className="w-4 h-4" />
@@ -779,7 +781,11 @@ export default function Expenses() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => openDeleteModal(expense)}
+                                onClick={() => {
+                                  console.log('Delete button clicked for expense:', expense.id);
+                                  openDeleteModal(expense);
+                                }}
+                                type="button"
                                 className="text-zinc-400 hover:text-red-400 p-1"
                               >
                                 <Trash2 className="w-4 h-4" />
