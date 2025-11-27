@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabaseClient";
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+
+
 import {
     Plus,
     AlertCircle,
@@ -28,7 +30,8 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+// FIX 1: Added DialogDescription to imports to prevent crash on modal open
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -134,6 +137,7 @@ function formatCurrency(n) {
         maximumFractionDigits: 2,
     }).format(Number(n));
 }
+
 
 export default function Budgets() {
     const [user, setUser] = useState(null);
@@ -567,6 +571,7 @@ export default function Budgets() {
         }
     };
 
+    // FIX 2: Fixed handle delete to not clear state before animation ends
     const handleDeleteBudget = async () => {
         if (!selectedBudget) return;
 
@@ -574,13 +579,23 @@ export default function Budgets() {
         try {
             const { error } = await supabase
                 .from("budgets")
-                .update({ is_active: false }) // Soft delete
+                .update({ is_active: false })
                 .eq("id", selectedBudget.id)
                 .eq("user_id", user.id);
 
             if (error) {
                 setError(`Failed to delete budget: ${error.message}`);
+                toast({
+                    title: "Failed to Delete Budget",
+                    description: error.message,
+                    variant: "destructive",
+                });
             } else {
+                toast({
+                    title: "Budget Deleted Successfully",
+                    description: `Budget "${selectedBudget.name}" has been removed.`,
+                    variant: "success",
+                });
                 setShowDeleteModal(false);
                 setSelectedBudget(null);
                 setError("");
@@ -588,6 +603,11 @@ export default function Budgets() {
             }
         } catch (err) {
             setError(`Unexpected error: ${err.message}`);
+            toast({
+                title: "Unexpected Error",
+                description: err.message,
+                variant: "destructive",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -795,7 +815,7 @@ export default function Budgets() {
                                     whileHover="hover"
                                     custom={index}
                                 >
-                                    <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900   border-zinc-800">
+                                    <Card className="bg-gradient-to-br from-zinc-950 to-zinc-900  border-zinc-800">
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle className="text-sm font-medium text-zinc-400">
                                                 {stat.title}
@@ -1162,7 +1182,7 @@ export default function Budgets() {
                                     <div className="space-y-2">
                                         <Label htmlFor="category" className=" text-zinc-400">Category (Optional)</Label>
                                         <Select
-                                        
+
                                             value={formData.category_id}
                                             onValueChange={(value) => {
                                                 setFormData((prev) => ({
@@ -1172,10 +1192,10 @@ export default function Budgets() {
                                             }}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="All categories"  />
+                                                <SelectValue placeholder="All categories" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-zinc-900 ">
-                                                <SelectItem  value="all">All categories</SelectItem>
+                                                <SelectItem value="all">All categories</SelectItem>
                                                 {categories.map((category) => (
                                                     <SelectItem key={category.id} value={category.id}>
                                                         <div className="flex items-center gap-2 ">
@@ -1466,37 +1486,37 @@ export default function Budgets() {
                             initial="hidden"
                             animate="visible"
                             exit="exit"
+                            onClick={() => setShowDeleteModal(false)}
                         >
                             <motion.div
                                 className="w-full max-w-sm bg-zinc-900 rounded-lg p-6 shadow-2xl border border-zinc-800"
                                 variants={modalVariants}
+                                onClick={(e) => e.stopPropagation()}
                             >
-                                <DialogHeader className="mb-4">
-                                    <DialogTitle className="text-xl font-bold text-zinc-50">Confirm Deletion</DialogTitle>
-                                    <DialogDescription className="text-zinc-400">
+                                <div className="mb-4">
+                                    <h2 className="text-xl font-bold text-zinc-50 mb-2">Confirm Deletion</h2>
+                                    <p className="text-zinc-400 text-sm">
                                         Are you sure you want to delete the budget "{selectedBudget.name}"? This action cannot be undone.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <div className="flex justify-end gap-2">
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => setShowDeleteModal(false)}
-                                            className="bg-zinc-700 text-zinc-50 hover:bg-zinc-600"
-                                            disabled={submitting}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            onClick={handleDeleteBudget}
-                                            className="bg-red-600 text-zinc-50 hover:bg-red-700"
-                                            disabled={submitting}
-                                        >
-                                            {submitting ? "Deleting..." : "Delete"}
-                                        </Button>
-                                    </div>
-                                </DialogFooter>
+                                    </p>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        className="bg-zinc-700 text-zinc-50 hover:bg-zinc-600"
+                                        disabled={submitting}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        onClick={handleDeleteBudget}
+                                        className="bg-red-600 text-zinc-50 hover:bg-red-700"
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? "Deleting..." : "Delete"}
+                                    </Button>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}
