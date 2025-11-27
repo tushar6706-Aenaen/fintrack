@@ -47,7 +47,7 @@ async function callGeminiApi(prompt, maxRetries = 5, initialDelay = 1000) {
             }
 
             const result = await response.json();
-
+            
             // Extract the generated text safely
             if (result.candidates && result.candidates.length > 0 &&
                 result.candidates[0].content && result.candidates[0].content.parts &&
