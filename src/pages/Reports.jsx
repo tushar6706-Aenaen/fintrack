@@ -176,16 +176,16 @@ const ReportsPage = () => {
 
             // Fetch personal data (where group_id is NULL)
             const [{ data: expData, error: expError },
-                   { data: incData, error: incError },
-                   { data: catData, error: catError },
-                   { data: sgData, error: sgError },
-                   { data: budData, error: budError }] = await Promise.all([
-                supabase.from("expenses").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
-                supabase.from("income").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
-                supabase.from("categories").select("id, name, icon, color").eq("user_id", userId).eq("is_active", true),
-                supabase.from("savings_goals").select("*").eq("user_id", userId),
-                supabase.from("budgets").select("*").eq("user_id", userId).is("group_id", null).eq("is_active", true)
-            ]);
+                { data: incData, error: incError },
+                { data: catData, error: catError },
+                { data: sgData, error: sgError },
+                { data: budData, error: budError }] = await Promise.all([
+                    supabase.from("expenses").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
+                    supabase.from("income").select("*").eq("user_id", userId).is("group_id", null).order("date", { ascending: false }),
+                    supabase.from("categories").select("id, name, icon, color").eq("user_id", userId).eq("is_active", true),
+                    supabase.from("savings_goals").select("*").eq("user_id", userId),
+                    supabase.from("budgets").select("*").eq("user_id", userId).is("group_id", null).eq("is_active", true)
+                ]);
             if (expError) throw expError; if (incError) throw incError; if (catError) throw catError;
             if (sgError) throw sgError; if (budError) throw budError;
 
@@ -311,8 +311,8 @@ const ReportsPage = () => {
                 const expenseDate = parseISO(exp.date);
                 // Only personal expenses
                 return exp.group_id === null &&
-                       isWithinInterval(expenseDate, { start: budgetStartDate, end: budgetEndDate }) &&
-                       (budget.category_id ? exp.category_id === budget.category_id : true);
+                    isWithinInterval(expenseDate, { start: budgetStartDate, end: budgetEndDate }) &&
+                    (budget.category_id ? exp.category_id === budget.category_id : true);
             });
 
             const categoryExpenses = expensesForBudgetPeriod
@@ -361,7 +361,7 @@ const ReportsPage = () => {
                 color: 'bg-indigo-600',
                 data: expensesByCategory
             },
-            
+
             {
                 id: '4',
                 title: 'Savings Goals Progress',
@@ -434,8 +434,8 @@ const ReportsPage = () => {
             {
                 label: 'Net Cash Flow',
                 value: formatCurrency(calculatedNetIncome),
-                
-                trend:  'up'  ,
+
+                trend: 'up',
                 icon: calculatedNetIncome >= 0 ? ArrowUpRight : ArrowDownRight
             },
             {
@@ -445,7 +445,7 @@ const ReportsPage = () => {
                 trend: expensesTrend > 0 ? 'up' : expensesTrend < 0 ? 'down' : 'neutral',
                 icon: Activity
             },
-            
+
             {
                 label: 'Savings Progress',
                 value: `${totalSavingsTarget > 0 ? Math.round((totalSavingsProgress / totalSavingsTarget) * 100) : 0}%`,
@@ -503,9 +503,9 @@ const ReportsPage = () => {
             switch (report.id) {
                 case '1':
                     csvContent = 'Metric,Amount\n' +
-                                 `Total Income,${report.data.totalIncome}\n` +
-                                 `Total Expenses,${report.data.totalExpenses}\n` +
-                                 `Net Income,${report.data.netIncome}`;
+                        `Total Income,${report.data.totalIncome}\n` +
+                        `Total Expenses,${report.data.totalExpenses}\n` +
+                        `Net Income,${report.data.netIncome}`;
                     filename = 'net-cash-flow.csv';
                     break;
                 case '2':
@@ -524,24 +524,24 @@ const ReportsPage = () => {
                     break;
                 case '4':
                     csvContent = 'Goal Name,Target Amount,Current Amount,Target Date,Progress (%)\n' +
-                                 report.data.activeSavingsGoals.map(goal => {
-                                    const progress = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount * 100).toFixed(1) : 0;
-                                    return `${goal.name},${goal.target_amount},${goal.current_amount},${goal.target_date || 'N/A'},${progress}`;
-                                }).join('\n');
+                        report.data.activeSavingsGoals.map(goal => {
+                            const progress = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount * 100).toFixed(1) : 0;
+                            return `${goal.name},${goal.target_amount},${goal.current_amount},${goal.target_date || 'N/A'},${progress}`;
+                        }).join('\n');
                     filename = 'savings-goals.csv';
                     break;
                 case '5':
                     csvContent = 'Budget Name,Amount,Spent,Remaining,Percentage Used (%),Status\n' +
-                                 report.data.map(budget =>
-                                    `${budget.name},${budget.amount || 0},${budget.spent || 0},${budget.remaining || 0},${budget.percentage.toFixed(1) || 0},${budget.status}`
-                                ).join('\n');
+                        report.data.map(budget =>
+                            `${budget.name},${budget.amount || 0},${budget.spent || 0},${budget.remaining || 0},${budget.percentage.toFixed(1) || 0},${budget.status}`
+                        ).join('\n');
                     filename = 'budget-performance.csv';
                     break;
                 case '6':
                     csvContent = 'Payment Method,Total Spent\n' +
-                                 Object.entries(report.data || {}).map(([method, amount]) =>
-                                    `${method},${amount || 0}`
-                                ).join('\n');
+                        Object.entries(report.data || {}).map(([method, amount]) =>
+                            `${method},${amount || 0}`
+                        ).join('\n');
                     filename = 'payment-methods.csv';
                     break;
                 default:
@@ -620,7 +620,7 @@ const ReportsPage = () => {
                 case '2':
                     return (
                         <ul className="space-y-2">
-                            {Object.entries(report.data || {}).sort((a,b) => (b[1]?.amount || 0) - (a[1]?.amount || 0)).map(([cat, data]) => (
+                            {Object.entries(report.data || {}).sort((a, b) => (b[1]?.amount || 0) - (a[1]?.amount || 0)).map(([cat, data]) => (
                                 <li key={cat} className="flex justify-between items-center text-slate-300">
                                     <span className="font-medium flex items-center gap-2">
                                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></span>
@@ -634,7 +634,7 @@ const ReportsPage = () => {
                 case '3':
                     return (
                         <ul className="space-y-2">
-                            {Object.entries(report.data || {}).sort((a,b) => (b[1] || 0) - (a[1] || 0)).map(([source, amount]) => (
+                            {Object.entries(report.data || {}).sort((a, b) => (b[1] || 0) - (a[1] || 0)).map(([source, amount]) => (
                                 <li key={source} className="flex justify-between items-center text-slate-300">
                                     <span className="font-medium">{source.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     <span>{formatCurrency(amount)}</span>
@@ -647,30 +647,30 @@ const ReportsPage = () => {
                         <div className="space-y-4">
                             {report.data.activeSavingsGoals.length > 0 ? (
                                 <>
-                                <h4 className="font-semibold text-slate-200">Active Goals:</h4>
-                                <ul className="space-y-2">
-                                    {report.data.activeSavingsGoals.map(goal => (
-                                        <li key={goal.id} className="text-slate-300">
-                                            <p className="font-medium">{goal.name}</p>
-                                            <p className="text-sm text-slate-400">Target: {formatCurrency(goal.target_amount)} | Current: {formatCurrency(goal.current_amount)}</p>
-                                            <p className="text-sm text-slate-400">Progress: {goal.target_amount > 0 ? (goal.current_amount / goal.target_amount * 100).toFixed(1) : 0}%</p>
-                                        </li>
-                                    ))}
-                                </ul>
+                                    <h4 className="font-semibold text-slate-200">Active Goals:</h4>
+                                    <ul className="space-y-2">
+                                        {report.data.activeSavingsGoals.map(goal => (
+                                            <li key={goal.id} className="text-slate-300">
+                                                <p className="font-medium">{goal.name}</p>
+                                                <p className="text-sm text-slate-400">Target: {formatCurrency(goal.target_amount)} | Current: {formatCurrency(goal.current_amount)}</p>
+                                                <p className="text-sm text-slate-400">Progress: {goal.target_amount > 0 ? (goal.current_amount / goal.target_amount * 100).toFixed(1) : 0}%</p>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </>
                             ) : (
                                 <p className="text-slate-400">No active savings goals.</p>
                             )}
                             {report.data.achievedSavingsGoals.length > 0 && (
                                 <>
-                                <h4 className="font-semibold text-slate-200 mt-4">Achieved Goals:</h4>
-                                <ul className="space-y-2">
-                                    {report.data.achievedSavingsGoals.map(goal => (
-                                        <li key={goal.id} className="text-slate-500 line-through">
-                                            <p className="font-medium">{goal.name}</p>
-                                        </li>
-                                    ))}
-                                </ul>
+                                    <h4 className="font-semibold text-slate-200 mt-4">Achieved Goals:</h4>
+                                    <ul className="space-y-2">
+                                        {report.data.achievedSavingsGoals.map(goal => (
+                                            <li key={goal.id} className="text-slate-500 line-through">
+                                                <p className="font-medium">{goal.name}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </>
                             )}
                         </div>
@@ -683,18 +683,16 @@ const ReportsPage = () => {
                                     <p className="font-medium text-slate-200">{budget.name} ({budget.period_type})</p>
                                     <p className="text-sm text-slate-400">Budget: {formatCurrency(budget.amount)} | Spent: {formatCurrency(budget.spent)} | Remaining: {formatCurrency(budget.remaining)}</p>
                                     <div className="flex items-center gap-2 text-sm mt-1">
-                                        <Badge className={`px-2 py-0.5 text-xs ${
-                                            budget.status === 'over' ? 'bg-red-900 text-red-300' :
-                                            budget.status === 'warning' ? 'bg-orange-900 text-orange-300' :
-                                            'bg-green-900 text-green-300'
-                                        }`}>
+                                        <Badge className={`px-2 py-0.5 text-xs ${budget.status === 'over' ? 'bg-red-900 text-red-300' :
+                                                budget.status === 'warning' ? 'bg-orange-900 text-orange-300' :
+                                                    'bg-green-900 text-green-300'
+                                            }`}>
                                             {budget.percentage.toFixed(1)}% Used
                                         </Badge>
-                                        <span className={`text-xs ${
-                                            budget.status === 'over' ? 'text-red-400' :
-                                            budget.status === 'warning' ? 'text-orange-400' :
-                                            'text-green-400'
-                                        }`}>
+                                        <span className={`text-xs ${budget.status === 'over' ? 'text-red-400' :
+                                                budget.status === 'warning' ? 'text-orange-400' :
+                                                    'text-green-400'
+                                            }`}>
                                             {budget.status === 'over' ? 'Over Budget' : budget.status === 'warning' ? 'Near Limit' : 'Good'}
                                         </span>
                                     </div>
@@ -705,7 +703,7 @@ const ReportsPage = () => {
                 case '6':
                     return (
                         <ul className="space-y-2">
-                            {Object.entries(report.data || {}).sort((a,b) => (b[1] || 0) - (a[1] || 0)).map(([method, amount]) => (
+                            {Object.entries(report.data || {}).sort((a, b) => (b[1] || 0) - (a[1] || 0)).map(([method, amount]) => (
                                 <li key={method} className="flex justify-between items-center text-slate-300">
                                     <span className="font-medium">{method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     <span>{formatCurrency(amount)}</span>
@@ -855,7 +853,7 @@ const ReportsPage = () => {
                             Gain insights into your spending, income, and financial goals.
                         </p>
                     </div>
-                    
+
                 </motion.div>
 
                 {/* Filters and Search */}
@@ -886,26 +884,25 @@ const ReportsPage = () => {
 
                 {/* Quick Stats */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+                    className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
                     variants={statsContainerVariants}
                     initial="hidden"
                     animate="visible"
                 >
                     {quickStats.map((stat, index) => (
                         <motion.div key={stat.label} variants={statCardVariants} whileHover="hover">
-                            <Card className="bg-zinc-900   border-zinc-800">
+                            <Card className="bg-zinc-900    border-zinc-800">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium text-zinc-400">
                                         {stat.label}
                                     </CardTitle>
-                                    <stat.icon className={`h-4 w-4 ${
-                                        stat.trend === 'up' ? 'text-green-400' :
-                                        stat.trend === 'down' ? 'text-red-400' :
-                                        'text-blue-400'
-                                    }`} />
+                                    <stat.icon className={`h-4 w-4 ${stat.trend === 'up' ? 'text-green-400' :
+                                            stat.trend === 'down' ? 'text-red-400' :
+                                                'text-blue-400'
+                                        }`} />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold text-zinc-50">{stat.value}</div>
+                                    <div className="text-2xl  font-bold text-zinc-50">{stat.value}</div>
                                     <p className="text-xs text-zinc-400">
                                         {stat.change}
                                     </p>
@@ -923,11 +920,10 @@ const ReportsPage = () => {
                                 variant={activeFilter === cat.id ? "secondary" : "outline"}
                                 size="sm"
                                 onClick={() => setActiveFilter(cat.id)}
-                                className={`${
-                                    activeFilter === cat.id
+                                className={`${activeFilter === cat.id
                                         ? "bg-zinc-50 text-zinc-900"
                                         : "border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50"
-                                }`}
+                                    }`}
                             >
                                 {cat.name} ({cat.count})
                             </Button>
@@ -936,71 +932,7 @@ const ReportsPage = () => {
                 </motion.div>
 
                 {/* AI Expense Reduction Advisor Card */}
-                <motion.div
-                    className="mb-8"
-                    variants={aiCardVariants}
-                    initial="hidden"
-                    animate="visible"
-                >
-                    <Card className="bg-gradient-to-br from-indigo-950 to-purple-950 border-indigo-800 overflow-hidden">
-                        <CardHeader className="flex flex-row items-center justify-between pb-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-700">
-                                    <Lightbulb className="w-4 h-4 text-yellow-300" />
-                                </div>
-                                <CardTitle className="text-lg text-zinc-50">AI Expense Reduction Advisor</CardTitle>
-                            </div>
-                            <Button
-                                onClick={handleGenerateTips}
-                                disabled={aiLoading}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                {aiLoading ? (
-                                    <motion.span
-                                        className="flex items-center"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Generating...
-                                    </motion.span>
-                                ) : (
-                                    <>
-                                        <Lightbulb className="w-4 h-4 mr-2" /> Get Tips
-                                    </>
-                                )}
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="min-h-[100px] bg-zinc-900 border border-zinc-800 rounded-md p-4 text-zinc-300 text-sm">
-                                {aiTips ? (
-                                    <motion.div
-                                        variants={aiContentVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                    >
-                                        {aiTips.split('\n').map((line, index) => (
-                                            <motion.p
-                                                key={index}
-                                                variants={aiTextItemVariants}
-                                                className="mb-1"
-                                                // Safely render the HTML after processing markdown for this line
-                                                dangerouslySetInnerHTML={{ __html: processLineForMarkdown(line) }}
-                                            />
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <p className="text-zinc-500 italic">
-                                        Click "Get Tips" to receive personalized advice on reducing your expenses based on your spending patterns.
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
-
+                
                 {/* Reports List */}
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader>
@@ -1027,53 +959,53 @@ const ReportsPage = () => {
                         ) : (
                             <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" variants={statsContainerVariants} initial="hidden" animate="visible">
                                 <AnimatePresence>
-                                {filteredReports.map(report => (
-                                    <motion.div
-                                        key={report.id}
-                                        variants={reportCardVariants}
-                                        whileHover="hover"
-                                        layout
-                                    >
-                                        <Card className="bg-zinc-800 border-zinc-700 h-full flex flex-col">
-                                            <CardHeader className="flex-row items-center justify-between pb-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${report.color}`}>
-                                                        <report.icon className="w-4 h-4 text-white" />
+                                    {filteredReports.map(report => (
+                                        <motion.div
+                                            key={report.id}
+                                            variants={reportCardVariants}
+                                            whileHover="hover"
+                                            layout
+                                        >
+                                            <Card className="bg-zinc-800 border-zinc-700 h-full flex flex-col">
+                                                <CardHeader className="flex-row items-center justify-between pb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${report.color}`}>
+                                                            <report.icon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <CardTitle className="text-lg text-zinc-50">{report.title}</CardTitle>
                                                     </div>
-                                                    <CardTitle className="text-lg text-zinc-50">{report.title}</CardTitle>
-                                                </div>
-                                                <Badge variant="secondary" className="bg-zinc-700 text-zinc-300">
-                                                    {report.category}
-                                                </Badge>
-                                            </CardHeader>
-                                            <CardContent className="flex-1 flex flex-col justify-between">
-                                                <div>
-                                                    <p className="text-zinc-400 text-sm mb-3 line-clamp-2">
-                                                        {report.description}
-                                                    </p>
-                                                    <div className="text-xs text-zinc-500 mb-4">
-                                                        Last updated: {formatDate(report.lastGenerated)}
+                                                    <Badge variant="secondary" className="bg-zinc-700 text-zinc-300">
+                                                        {report.category}
+                                                    </Badge>
+                                                </CardHeader>
+                                                <CardContent className="flex-1 flex flex-col justify-between">
+                                                    <div>
+                                                        <p className="text-zinc-400 text-sm mb-3 line-clamp-2">
+                                                            {report.description}
+                                                        </p>
+                                                        <div className="text-xs text-zinc-500 mb-4">
+                                                            Last updated: {formatDate(report.lastGenerated)}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => setSelectedReport(report)} className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-50">
-                                                        <Eye className="w-3 h-3 mr-1" /> View Details
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => exportReport(report)} className="text-zinc-400 hover:text-green-400">
-                                                        <Download className="w-3 h-3 mr-1" /> Export
-                                                    </Button>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </motion.div>
-                                ))}
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => setSelectedReport(report)} className="border-zinc-600 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-50">
+                                                            <Eye className="w-3 h-3 mr-1" /> View Details
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" onClick={() => exportReport(report)} className="text-zinc-400 hover:text-green-400">
+                                                            <Download className="w-3 h-3 mr-1" /> Export
+                                                        </Button>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    ))}
                                 </AnimatePresence>
                             </motion.div>
                         )}
                     </CardContent>
                 </Card>
             </div>
-            
+
             {/* Detailed Report Modal */}
             <AnimatePresence>
                 {selectedReport && (
