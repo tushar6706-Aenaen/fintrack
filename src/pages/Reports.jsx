@@ -361,19 +361,7 @@ const ReportsPage = () => {
                 color: 'bg-indigo-600',
                 data: expensesByCategory
             },
-            {
-                id: '3',
-                title: 'Income Sources Report',
-                category: 'financial',
-                description: `${Object.keys(incomeBySource).length} income sources totaling ${formatCurrency(calculatedTotalIncome)}`,
-                lastGenerated: new Date().toISOString(),
-                size: 'Live Data',
-                format: 'Interactive',
-                status: 'ready',
-                icon: DollarSign,
-                color: 'bg-blue-600',
-                data: incomeBySource
-            },
+            
             {
                 id: '4',
                 title: 'Savings Goals Progress',
@@ -446,8 +434,8 @@ const ReportsPage = () => {
             {
                 label: 'Net Cash Flow',
                 value: formatCurrency(calculatedNetIncome),
-                change: `${calculatedNetIncome >= 0 ? 'Positive' : 'Negative'}`,
-                trend: calculatedNetIncome >= 0 ? 'up' : 'down',
+                
+                trend:  'up'  ,
                 icon: calculatedNetIncome >= 0 ? ArrowUpRight : ArrowDownRight
             },
             {
@@ -457,13 +445,7 @@ const ReportsPage = () => {
                 trend: expensesTrend > 0 ? 'up' : expensesTrend < 0 ? 'down' : 'neutral',
                 icon: Activity
             },
-            {
-                label: 'Total Income',
-                value: formatCurrency(calculatedTotalIncome),
-                change: `${incomeTrend > 0 ? '+' : ''}${incomeTrend}% vs Last 30 Days`,
-                trend: incomeTrend > 0 ? 'up' : incomeTrend < 0 ? 'down' : 'neutral',
-                icon: Banknote
-            },
+            
             {
                 label: 'Savings Progress',
                 value: `${totalSavingsTarget > 0 ? Math.round((totalSavingsProgress / totalSavingsTarget) * 100) : 0}%`,
@@ -904,14 +886,14 @@ const ReportsPage = () => {
 
                 {/* Quick Stats */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
                     variants={statsContainerVariants}
                     initial="hidden"
                     animate="visible"
                 >
                     {quickStats.map((stat, index) => (
                         <motion.div key={stat.label} variants={statCardVariants} whileHover="hover">
-                            <Card className="bg-zinc-900 border-zinc-800">
+                            <Card className="bg-zinc-900   border-zinc-800">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium text-zinc-400">
                                         {stat.label}
